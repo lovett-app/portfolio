@@ -10,7 +10,7 @@ const PORTFOLIO_DATA = {
     "scheduleYear": 2026,
     "adminPreviewPassword": "LOVETT",
     "heroImage": "2026-ld-cherry-mat-01",
-    "contactFormKey": "",
+    "contactFormKey": "30e8c1e0-65e0-44dd-a769-8d970634446b",
     "github": {
       "owner": "lovett-app",
       "repo": "portfolio",
