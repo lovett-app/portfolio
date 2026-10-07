@@ -398,7 +398,7 @@
   }
 
   function projectEditorHtml(p) {
-    const cats = ['ld','cover','sd','costume','edit','background'];
+    const cats = ['ld','cover','sd','costume','original','edit','background'];
     const title = typeof p.title === 'object' ? p.title.ko : p.title;
     const desc = typeof p.description === 'object' ? p.description.ko : p.description;
     return `
