@@ -1168,7 +1168,8 @@ const PORTFOLIO_DATA = {
       "categories": [
         "ld",
         "costume",
-        "edit"
+        "edit",
+        "background"
       ],
       "style": "꾸덕",
       "type": "WORK",
@@ -1180,7 +1181,8 @@ const PORTFOLIO_DATA = {
         "all": "2025-ld-remember-project-04",
         "ld": "2025-ld-remember-project-04",
         "costume": "2025-ld-remember-project-02",
-        "edit": "2025-ld-remember-project-01"
+        "edit": "2025-ld-remember-project-01",
+        "background": "2025-ld-remember-project-03"
       },
       "images": [
         {
