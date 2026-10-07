@@ -603,3 +603,37 @@ html { scrollbar-color: #e7b6c9 transparent; scrollbar-width: thin; }
 .contact-file-list span { display:block; padding:5px 8px; font-size:10px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .contact-file-list button { position:absolute; top:6px; right:6px; width:24px; height:24px; border:0; border-radius:999px; background:rgba(37,34,42,.72); color:#fff; font-size:15px; line-height:1; cursor:pointer; }
 .contact-file-list button:hover { background:#c4486f; }
+
+/* ===== 행사 카드: 같은 높이의 포스터형 ===== */
+.activity-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important; gap: 22px 18px; align-items: start; }
+.event-card { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.event-poster { position: relative; display: block; width: 100%; aspect-ratio: 3 / 4; padding: 0; border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: #f4eff3; cursor: pointer; box-shadow: 0 10px 30px rgba(79, 59, 81, .08); transition: transform .25s ease, box-shadow .25s ease; }
+.event-poster:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(79, 59, 81, .14); }
+.event-poster img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; transition: transform .5s ease; }
+.event-poster:hover img { transform: scale(1.03); }
+.event-poster::after { content: ""; position: absolute; inset: auto 0 0 0; height: 34%; background: linear-gradient(transparent, rgba(37, 34, 42, .38)); pointer-events: none; }
+.event-card.no-info .event-poster::after { display: none; }
+.event-poster .status { position: absolute; top: 12px; left: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, .08); }
+.event-poster-count { position: absolute; right: 12px; bottom: 12px; z-index: 1; display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 999px; background: rgba(255, 255, 255, .92); color: var(--text); font-size: 10px; font-weight: 800; letter-spacing: .06em; }
+.event-poster-count b { font-size: 12px; color: #c4486f; }
+.event-poster-empty { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; text-align: center;
+  background: radial-gradient(circle at 25% 20%, rgba(255, 241, 169, .9), transparent 55%), radial-gradient(circle at 80% 85%, rgba(232, 221, 255, .95), transparent 55%), var(--pink); }
+.event-card.done .event-poster-empty { background: radial-gradient(circle at 25% 20%, rgba(255, 255, 255, .9), transparent 55%), radial-gradient(circle at 80% 85%, rgba(232, 221, 255, .8), transparent 55%), #efeaf0; }
+.event-poster-year { font-size: 12px; font-weight: 800; letter-spacing: .2em; color: rgba(37, 34, 42, .55); }
+.event-poster-day { font-size: clamp(54px, 6vw, 76px); font-weight: 800; letter-spacing: -.06em; line-height: 1; color: var(--text); }
+.event-poster-day small { font-size: .45em; letter-spacing: -.03em; color: rgba(37, 34, 42, .6); }
+.event-poster-note { margin-top: 10px; padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, .75); font-size: 11px; font-weight: 700; color: var(--muted); }
+.event-meta { padding: 0 4px; }
+.event-date { margin: 0 0 4px; font-size: 12px; color: var(--muted); letter-spacing: .02em; }
+.event-meta h3 { margin: 0; font-size: 20px; line-height: 1.25; letter-spacing: -.04em; }
+.event-meta h3 button { padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.event-meta h3 button:hover { color: #c4486f; }
+.event-booth { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+.event-booth::before { content: "BOOTH · "; font-size: 10px; font-weight: 800; letter-spacing: .08em; color: #a993a7; }
+@media (max-width: 720px) {
+  .activity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 18px 12px; }
+  .event-poster { border-radius: 16px; }
+  .event-meta h3 { font-size: 16px; }
+  .event-poster .status { top: 8px; left: 8px; padding: 5px 9px; font-size: 9px; }
+  .event-poster-count { right: 8px; bottom: 8px; padding: 5px 9px; }
+}

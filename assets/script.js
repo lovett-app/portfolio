@@ -206,27 +206,28 @@ function renderActivities() {
     return;
   }
 
-  activityGrid.innerHTML = source.map((event, index) => {
+  activityGrid.innerHTML = source.map(event => {
     const images = event.images || [];
-    const hasInfo = images.length > 0;
     const eventStatus = eventStatusFromDate(event.date);
     event.status = eventStatus;
     const statusLabel = eventStatus === "done" ? translations[activeLang].done : translations[activeLang].upcoming;
-    const booth = event.booth ? `<p class="booth-name">BOOTH · ${event.booth}</p>` : "";
-    const media = hasInfo
-      ? `<button class="activity-image-button" type="button" data-event-open="${event.id}" aria-label="${getText(event.title)} 인포 보기"><img data-safe-image src="${fullAsset(images[0])}" alt="${getText(event.title)} 부스 인포" loading="lazy"></button>`
-      : `<button class="activity-detail-link" type="button" data-event-open="${event.id}">${eventStatus === "upcoming" ? translations[activeLang].detailsLater : translations[activeLang].infoLater}<span>→</span></button>`;
-    const cardClass = index === 0 && hasInfo ? "featured" : "simple";
+    const title = getText(event.title);
+    const dateParts = String(event.date || "").match(/(\d{4})\.?(\d{1,2})?\.?(\d{1,2})?/) || [];
+    const bigDate = dateParts[2] ? `${dateParts[2].padStart(2, "0")}${dateParts[3] ? `<small>.${dateParts[3].padStart(2, "0")}</small>` : ""}` : "";
+    const poster = images.length
+      ? `<img data-safe-image src="${fullAsset(images[0])}" alt="${title} 부스 인포" loading="lazy"><span class="event-poster-count">INFO ${images.length > 1 ? `· ${images.length}` : ""}<b>↗</b></span>`
+      : `<div class="event-poster-empty"><span class="event-poster-year">${dateParts[1] || ""}</span><span class="event-poster-day">${bigDate}</span><span class="event-poster-note">${eventStatus === "upcoming" ? translations[activeLang].detailsLater : translations[activeLang].infoLater}</span></div>`;
     return `
-      <article class="activity-card ${cardClass} reveal visible">
-        <div class="activity-copy">
+      <article class="event-card ${images.length ? "has-info" : "no-info"} ${eventStatus} reveal visible">
+        <button class="event-poster" type="button" data-event-open="${event.id}" aria-label="${title} 인포 보기">
+          ${poster}
           <span class="status ${eventStatus}">${statusLabel}</span>
-          <p class="activity-date">${event.date}</p>
-          <h3>${getText(event.title)}</h3>
-          ${booth}
-          <button class="activity-page-link" type="button" data-event-open="${event.id}">INFO <span>↗</span></button>
+        </button>
+        <div class="event-meta">
+          <p class="event-date">${event.date || ""}</p>
+          <h3><button type="button" data-event-open="${event.id}">${title}</button></h3>
+          ${event.booth ? `<p class="event-booth">${event.booth}</p>` : ""}
         </div>
-        ${media}
       </article>`;
   }).join("");
   activityGrid.querySelectorAll('[data-event-open]').forEach(button => button.addEventListener('click', () => openEventInfo(button.dataset.eventOpen)));
