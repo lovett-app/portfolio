@@ -42,7 +42,8 @@
       owner: stored.owner || fromData.owner || guess.owner || '',
       repo: stored.repo || fromData.repo || guess.repo || '',
       branch: stored.branch || fromData.branch || 'main',
-      token: stored.token || ''
+      token: stored.token || '',
+      privateRepo: stored.privateRepo || ((stored.repo || fromData.repo || guess.repo) ? `${stored.repo || fromData.repo || guess.repo}-private` : '')
     };
   }
 
@@ -64,8 +65,9 @@
           <label>GitHub 아이디<input name="owner" value="${escapeHtml(cfg.owner)}" placeholder="예: lovett35" autocomplete="off" required></label>
           <label>저장소 이름<input name="repo" value="${escapeHtml(cfg.repo)}" placeholder="예: portfolio" autocomplete="off" required></label>
           <label>브랜치<input name="branch" value="${escapeHtml(cfg.branch)}" autocomplete="off" required></label>
+          <label>미공개 작품 저장소 (Private)<input name="privateRepo" value="${escapeHtml(cfg.privateRepo)}" placeholder="예: portfolio-private" autocomplete="off"></label>
           <label>연결 키 (Fine-grained token)<input name="token" type="password" value="${escapeHtml(cfg.token)}" placeholder="github_pat_로 시작하는 키" autocomplete="off" required></label>
-          <p class="publish-settings-help">키 만들기: <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">GitHub 토큰 만들기 ↗</a><br>Repository access → <b>Only select repositories</b>에서 이 저장소만 선택, Permissions → <b>Contents: Read and write</b>.</p>
+          <p class="publish-settings-help">키 만들기: <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">GitHub 토큰 만들기 ↗</a><br>Repository access → <b>Only select repositories</b>에서 이 저장소만 선택, Permissions → <b>Contents: Read and write</b>.<br>미공개 저장소를 쓰려면 같은 키의 저장소 목록에 그 저장소도 추가해 주세요.</p>
           <p class="admin-login-error publish-settings-result" aria-live="polite"></p>
           <div class="publish-settings-actions">
             <button type="button" class="admin-soft-btn" data-act="forget">이 기기에서 키 지우기</button>
@@ -80,7 +82,8 @@
         owner: form.owner.value.trim(),
         repo: form.repo.value.trim().replace(/\.git$/, ''),
         branch: form.branch.value.trim() || 'main',
-        token: form.token.value.trim()
+        token: form.token.value.trim(),
+        privateRepo: form.privateRepo.value.trim().replace(/\.git$/, '')
       });
       let settled = false;
       const finish = value => {
@@ -97,8 +100,16 @@
       dialog.querySelector('[data-act="test"]').addEventListener('click', async () => {
         result.textContent = '확인 중…';
         try {
-          const repo = await checkRepo(read());
-          result.textContent = `연결 성공: ${repo.full_name} (저장 가능)`;
+          const value = read();
+          const repo = await checkRepo(value);
+          let extra = '';
+          if (value.privateRepo) {
+            try {
+              const priv = await checkRepo({ ...value, repo: value.privateRepo });
+              extra = priv.private === false ? ` · 주의: ${priv.full_name}이(가) Public이에요! Private으로 바꿔 주세요.` : ` · 미공개 저장소 ${priv.full_name} 연결됨`;
+            } catch (error) { extra = ` · 미공개 저장소 연결 실패: ${error.message}`; }
+          }
+          result.textContent = `연결 성공: ${repo.full_name} (저장 가능)${extra}`;
         } catch (error) { result.textContent = error.message; }
       });
       form.addEventListener('submit', event => {
@@ -130,11 +141,13 @@
     }
     if (!response.ok) {
       let detail = '';
+      const fail = message => Object.assign(new Error(message), { status: response.status });
       try { detail = (await response.json()).message || ''; } catch (_) {}
-      if (response.status === 401) throw new Error('연결 키가 틀렸거나 만료됐습니다. 설정에서 새 키를 넣어 주세요.');
-      if (response.status === 404) throw new Error('저장소를 찾지 못했습니다. GitHub 아이디·저장소 이름·브랜치를 확인하고, 키에 이 저장소 권한이 있는지 확인해 주세요.');
-      if (response.status === 403) throw new Error('저장 권한이 없습니다. 키의 Permissions에서 Contents를 Read and write로 설정해 주세요.');
-      throw new Error(`GitHub 오류 (${response.status}) ${detail}`);
+      if (response.status === 401) throw fail('연결 키가 틀렸거나 만료됐습니다. 설정에서 새 키를 넣어 주세요.');
+      if (response.status === 404) throw fail('저장소를 찾지 못했습니다. GitHub 아이디·저장소 이름·브랜치를 확인하고, 키에 이 저장소 권한이 있는지 확인해 주세요.');
+      if (response.status === 403) throw fail('저장 권한이 없습니다. 키의 Permissions에서 Contents를 Read and write로 설정해 주세요.');
+      if (response.status === 409) throw fail('저장소가 비어 있습니다. 저장소를 만들 때 "Add a README file"을 체크해서 첫 파일이 있게 해 주세요.');
+      throw fail(`GitHub 오류 (${response.status}) ${detail}`);
     }
     return response.status === 204 ? null : response.json();
   }
@@ -159,6 +172,72 @@
     const bin = atob(String(b64).replace(/\s/g, ''));
     const bytes = Uint8Array.from(bin, ch => ch.charCodeAt(0));
     return new TextDecoder('utf-8').decode(bytes);
+  }
+
+  // ---------- 미공개 작품 (Private 저장소) ----------
+  // 구조: data.json  { projects: [...] }
+  //       images/full/<이름>.webp, images/thumbs/<이름>.webp
+  const privateState = { loaded: false, loading: null, known: new Set(), error: '' };
+  const privPath = cfg => `/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.privateRepo)}`;
+
+  async function ghRaw(cfg, path) {
+    const response = await fetch(`${API}${path}`, { headers: { 'Accept': 'application/vnd.github.raw', 'Authorization': `Bearer ${cfg.token}`, 'X-GitHub-Api-Version': '2022-11-28' } });
+    if (!response.ok) throw Object.assign(new Error(`파일을 읽지 못했습니다 (${response.status})`), { status: response.status });
+    return response.blob();
+  }
+
+  function imageIdsOf(projects, withThumbs = true) {
+    const ids = new Set();
+    projects.forEach(p => (p.images || []).forEach(img => {
+      if (img.src && !isBlob(img.src)) ids.add(img.src);
+      if (img.cleanSrc && !isBlob(img.cleanSrc) && img.cleanSrc !== img.src) ids.add(img.cleanSrc);
+    }));
+    return ids;
+  }
+
+  function loadPrivate() {
+    if (privateState.loaded) return Promise.resolve(false);
+    if (privateState.loading) return privateState.loading;
+    const cfg = getConfig();
+    if (location.protocol === 'file:' || !cfg.owner || !cfg.token || !cfg.privateRepo) return Promise.resolve(false);
+    privateState.loading = (async () => {
+      try {
+        const repoInfo = await gh(cfg, privPath(cfg));
+        if (repoInfo.private === false) throw new Error(`${repoInfo.full_name} 저장소가 Public이에요. Settings에서 Private으로 바꿔 주세요.`);
+        let list = [];
+        try {
+          const text = await (await ghRaw(cfg, `${privPath(cfg)}/contents/data.json?ref=${encodeURIComponent(cfg.branch)}`)).text();
+          list = (JSON.parse(text).projects || []);
+        } catch (error) { if (error.status !== 404) throw error; }
+        window.LOVETT_LOCAL_ASSETS = window.LOVETT_LOCAL_ASSETS || {};
+        for (const p of list) {
+          p.private = true;
+          for (const img of p.images || []) {
+            for (const [kind, id] of [['full', img.src], ['thumbs', img.src], ['full', img.cleanSrc !== img.src ? img.cleanSrc : null]]) {
+              if (!id) continue;
+              try {
+                const blob = await ghRaw(cfg, `${privPath(cfg)}/contents/images/${kind}/${encodeURIComponent(id)}.webp?ref=${encodeURIComponent(cfg.branch)}`);
+                window.LOVETT_LOCAL_ASSETS[`assets/images/${kind}/${id}.webp`] = URL.createObjectURL(blob);
+                if (kind === 'full') privateState.known.add(id);
+              } catch (_) { /* 이미지 하나가 없어도 나머지는 계속 */ }
+            }
+          }
+          (p.images || []).forEach(img => { initialNames.add(img.src); if (img.cleanSrc) initialNames.add(img.cleanSrc); });
+          if (!app.projects.some(x => x.id === p.id)) app.projects.push(p);
+        }
+        privateState.loaded = true;
+        privateState.error = '';
+        lastSavedSnapshot = snapshot();
+        return list.length > 0;
+      } catch (error) {
+        privateState.error = error.message;
+        console.warn('private works', error);
+        return false;
+      } finally {
+        privateState.loading = null;
+      }
+    })();
+    return privateState.loading;
   }
 
   // ---------- 이미지 준비 ----------
@@ -229,6 +308,8 @@
   app.events.forEach(e => (e.images || []).forEach(v => initialNames.add(v)));
   if (data.settings.heroImage) initialNames.add(data.settings.heroImage);
 
+  const publicKnown = new Set(initialNames);
+
   window.LOVETT_FILE_NAMES = {
     projectSlug, eventSlug,
     projectExample: p => `${nextName(projectPrefix(p), usedNames())}.webp`,
@@ -298,11 +379,18 @@
     }
   }
 
+  const cleanReplacer = (key, value) => (key === 'previewCovers' || key === 'thumbSrc') ? undefined : value;
   function serialize() {
-    return JSON.stringify(data, (key, value) => {
-      if (key === 'previewCovers' || key === 'thumbSrc') return undefined;
-      return value;
+    return JSON.stringify(data, function (key, value) {
+      if (key === 'projects' && this === data && Array.isArray(value)) return value.filter(p => !p.private);
+      return cleanReplacer(key, value);
     }, 2);
+  }
+  function serializePrivate() {
+    const projects = app.projects.filter(p => p.private).map(p => { const c = { ...p }; delete c.private; return c; });
+    const json = JSON.stringify({ projects }, cleanReplacer, 2);
+    if (json.includes('"blob:')) throw new Error('아직 처리되지 않은 임시 이미지가 있습니다. 다시 시도해 주세요.');
+    return json + '\n';
   }
 
   // 저장 안 한 수정이 있는지 비교할 때는 자동 계산되는 값(행사 상태)은 빼고 봅니다.
@@ -344,18 +432,93 @@
       const parentSha = ref.object.sha;
       const parentCommit = await gh(cfg, `${repoPath}/git/commits/${parentSha}`);
 
+      // 미공개 작품이 있거나 미공개 저장소가 설정돼 있으면, 먼저 기존 미공개 작품을 불러와 둡니다.
+      const hasPrivate = app.projects.some(p => p.private);
+      if (cfg.privateRepo && !privateState.loaded) { await loadPrivate(); }
+      if (hasPrivate && !privateState.loaded) {
+        throw new Error(`미공개 작품을 저장할 비공개 저장소에 연결하지 못했습니다. ${privateState.error || '설정에서 미공개 저장소 이름을 확인해 주세요.'}`);
+      }
+
       await materializeImages(progress);
       // GitHub 아이디·저장소 이름은 사이트 파일에 남기지 않습니다 (이 브라우저에만 기억).
       delete data.settings.github;
       delete data.settings.adminPreviewPassword;
 
+      const privateIds = imageIdsOf(app.projects.filter(p => p.private));
+      const publicProjectIds = imageIdsOf(app.projects.filter(p => !p.private));
+      const idOfPath = path => path.replace(/^.*\//, '').replace(/\.webp$/, '');
+      const thumbIds = new Set(app.projects.flatMap(p => (p.images || []).map(img => img.src)));
+
+      async function uploadBlob(path, blob, base) {
+        const created = await gh(cfg, `${base}/git/blobs`, { method: 'POST', body: JSON.stringify({ content: await blobToBase64(blob), encoding: 'base64' }) });
+        return { path, mode: '100644', type: 'blob', sha: created.sha };
+      }
+
+      // ---- 1) 미공개 저장소 ----
+      const privateTree = [];
+      const privateAdded = [], privateRemoved = [];
+      if (privateState.loaded) {
+        const base = privPath(cfg);
+        for (const id of privateIds) {
+          if (privateState.known.has(id)) continue;
+          for (const kind of thumbIds.has(id) ? ['full', 'thumbs'] : ['full']) {
+            const pendingPath = `assets/images/${kind}/${id}.webp`;
+            progress(`미공개 이미지 업로드 중… (${id})`);
+            const blob = pendingUploads.get(pendingPath) || await fetchBlob(asset(kind, id));
+            privateTree.push(await uploadBlob(`images/${kind}/${id}.webp`, blob, base));
+          }
+          privateAdded.push(id);
+        }
+        // 공개로 바뀐 작품의 그림은 미공개 저장소에서 지웁니다.
+        for (const id of privateState.known) {
+          if (privateIds.has(id)) continue;
+          privateTree.push({ path: `images/full/${id}.webp`, mode: '100644', type: 'blob', sha: null });
+          if (thumbIds.has(id) || publicProjectIds.has(id)) privateTree.push({ path: `images/thumbs/${id}.webp`, mode: '100644', type: 'blob', sha: null });
+          privateRemoved.push(id);
+        }
+        privateTree.push({ path: 'data.json', mode: '100644', type: 'blob', content: serializePrivate() });
+        progress('미공개 작품 저장 중…');
+        const pref = await gh(cfg, `${base}/git/ref/heads/${encodeURIComponent(cfg.branch)}`);
+        const pcommit = await gh(cfg, `${base}/git/commits/${pref.object.sha}`);
+        let ptree;
+        try {
+          ptree = await gh(cfg, `${base}/git/trees`, { method: 'POST', body: JSON.stringify({ base_tree: pcommit.tree.sha, tree: privateTree }) });
+        } catch (error) {
+          // 지우려던 파일이 이미 없으면 지우기 항목만 빼고 다시 시도
+          ptree = await gh(cfg, `${base}/git/trees`, { method: 'POST', body: JSON.stringify({ base_tree: pcommit.tree.sha, tree: privateTree.filter(e => e.sha !== null) }) });
+        }
+        const pc = await gh(cfg, `${base}/git/commits`, { method: 'POST', body: JSON.stringify({ message: `편집기에서 저장 (${new Date().toLocaleString('ko-KR')})`, tree: ptree.sha, parents: [pref.object.sha] }) });
+        await gh(cfg, `${base}/git/refs/heads/${encodeURIComponent(cfg.branch)}`, { method: 'PATCH', body: JSON.stringify({ sha: pc.sha }) });
+        privateAdded.forEach(id => privateState.known.add(id));
+        privateRemoved.forEach(id => privateState.known.delete(id));
+      }
+
+      // ---- 2) 공개 저장소 (사이트) ----
       const tree = [];
+      const publicAdded = [], publicRemoved = [];
       let done = 0;
       for (const [path, blob] of pendingUploads) {
+        if (privateIds.has(idOfPath(path))) continue;
         done++;
-        progress(`이미지 업로드 중… (${done}/${pendingUploads.size})`);
-        const created = await gh(cfg, `${repoPath}/git/blobs`, { method: 'POST', body: JSON.stringify({ content: await blobToBase64(blob), encoding: 'base64' }) });
-        tree.push({ path, mode: '100644', type: 'blob', sha: created.sha });
+        progress(`이미지 업로드 중… (${done})`);
+        tree.push(await uploadBlob(path, blob, repoPath));
+        publicAdded.push(idOfPath(path));
+      }
+      // 미공개였다가 공개로 바뀐 작품의 그림을 사이트에 올립니다.
+      for (const id of publicProjectIds) {
+        if (publicKnown.has(id) || publicAdded.includes(id)) continue;
+        for (const kind of thumbIds.has(id) ? ['full', 'thumbs'] : ['full']) {
+          progress(`공개로 바뀐 이미지 올리는 중… (${id})`);
+          tree.push(await uploadBlob(`assets/images/${kind}/${id}.webp`, await fetchBlob(asset(kind, id)), repoPath));
+        }
+        publicAdded.push(id);
+      }
+      // 미공개로 바뀐 작품의 그림은 사이트 저장소에서 지웁니다.
+      for (const id of privateIds) {
+        if (!publicKnown.has(id)) continue;
+        tree.push({ path: `assets/images/full/${id}.webp`, mode: '100644', type: 'blob', sha: null });
+        if (thumbIds.has(id)) tree.push({ path: `assets/images/thumbs/${id}.webp`, mode: '100644', type: 'blob', sha: null });
+        publicRemoved.push(id);
       }
 
       progress('글·설정 저장 중…');
@@ -370,7 +533,12 @@
         if (next !== html) tree.push({ path: 'index.html', mode: '100644', type: 'blob', content: next });
       } catch (_) { /* index.html 버전 표시는 실패해도 저장에는 지장이 없습니다. */ }
 
-      const newTree = await gh(cfg, `${repoPath}/git/trees`, { method: 'POST', body: JSON.stringify({ base_tree: parentCommit.tree.sha, tree }) });
+      let newTree;
+      try {
+        newTree = await gh(cfg, `${repoPath}/git/trees`, { method: 'POST', body: JSON.stringify({ base_tree: parentCommit.tree.sha, tree }) });
+      } catch (error) {
+        newTree = await gh(cfg, `${repoPath}/git/trees`, { method: 'POST', body: JSON.stringify({ base_tree: parentCommit.tree.sha, tree: tree.filter(e => e.sha !== null) }) });
+      }
       const d = new Date();
       const commit = await gh(cfg, `${repoPath}/git/commits`, { method: 'POST', body: JSON.stringify({
         message: `편집기에서 저장 (${d.toLocaleString('ko-KR')})`,
@@ -380,6 +548,8 @@
       await gh(cfg, `${repoPath}/git/refs/heads/${encodeURIComponent(cfg.branch)}`, { method: 'PATCH', body: JSON.stringify({ sha: commit.sha }) });
 
       pendingUploads.clear();
+      publicAdded.forEach(id => publicKnown.add(id));
+      publicRemoved.forEach(id => publicKnown.delete(id));
       lastSavedSnapshot = snapshot();
       rerender();
       const time = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
@@ -408,5 +578,5 @@
     }
   });
 
-  window.LOVETT_PUBLISH = { publish, openSettings };
+  window.LOVETT_PUBLISH = { publish, openSettings, loadPrivate, privateStatus: () => ({ ...privateState, known: privateState.known.size }) };
 })();

@@ -192,3 +192,14 @@ body.admin-editor-open{padding-right:0;overflow:hidden}
 .admin-body{scrollbar-gutter:stable}
 .ah-steps{margin:0 0 14px;padding:12px 14px 12px 32px;border-radius:12px;background:#faf7f9;font-size:12px;line-height:1.7;color:#5d5060}
 .ah-steps li+li{margin-top:4px}
+
+/* 미공개 작품 */
+.admin-private-badge{justify-self:start;margin-top:4px;padding:2px 8px;border-radius:999px;background:#463d48;color:#fff;font-size:9px;font-weight:800;letter-spacing:.04em}
+.admin-private-badge::before{content:'🔒 '}
+.admin-list-item.is-private-item{background:repeating-linear-gradient(135deg,#fff,#fff 10px,#faf6f9 10px,#faf6f9 20px)}
+.admin-private-toggle{display:flex!important;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#f4f0f5;border:1px solid #e6dce6;cursor:pointer}
+.admin-private-toggle input{margin-top:3px;accent-color:#463d48;flex:0 0 auto}
+.admin-private-toggle span{font-size:12px;line-height:1.55;color:#6d6070;letter-spacing:0;font-weight:500}
+.admin-private-toggle b{display:block;color:#25222a;font-size:13px}
+.admin-private-note{font-weight:700}
+.admin-private-toggle input{width:18px!important;height:18px;min-height:0!important;padding:0!important;border:0!important;box-shadow:none!important}.admin-private-toggle span{flex:1 1 auto;text-transform:none}

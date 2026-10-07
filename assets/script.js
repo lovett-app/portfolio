@@ -69,7 +69,7 @@ function emptyState(title, body) {
 
 function renderWorks(filter = activeFilter) {
   activeFilter = filter;
-  const source = projects.filter(item => item.visible !== false).sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+  const source = projects.filter(item => item.visible !== false && !item.private).sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   const visible = filter === "all" ? source : source.filter(project => project.categories?.includes(filter));
   if (description) description.textContent = filterDescriptions[filter] || "";
   if (!grid) return;
@@ -118,7 +118,7 @@ function syncWorkUrl(id) {
 }
 
 function openProject(id, syncUrl = false) {
-  const project = projects.find(item => item.id === id && item.visible !== false);
+  const project = projects.find(item => item.id === id && item.visible !== false && !item.private);
   if (!project) {
     if (modalContent) modalContent.innerHTML = emptyState("작업물을 찾을 수 없습니다.", "삭제되었거나 잘못된 링크입니다.");
     if (workModal && !workModal.open) workModal.showModal();

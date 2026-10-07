@@ -121,6 +121,15 @@
     editor.hidden = false;
     document.body.classList.add('admin-editor-open');
     renderEditor();
+    // 비공개 저장소의 미공개 작품을 불러와 목록에 추가합니다 (사이트에는 표시하지 않음).
+    window.LOVETT_PUBLISH?.loadPrivate?.().then(changed => {
+      if (changed) { renderEditor(); setTab(activeTab); }
+      const st = window.LOVETT_PUBLISH?.privateStatus?.();
+      const n = app.projects.filter(x => x.private).length;
+      const el = editor.querySelector('#adminSaveStatus');
+      if (el && st?.loaded && n) el.insertAdjacentHTML('beforeend', ` <span class="admin-private-note">· 미공개 작품 ${n}개 불러옴</span>`);
+      else if (el && st?.error && app.projects.some(x => x.private)) el.insertAdjacentHTML('beforeend', ` <span class="admin-private-note">· 미공개 저장소 연결 안 됨: ${escapeHtml(st.error)}</span>`);
+    });
   }
 
   function closeEditor() {
@@ -381,9 +390,9 @@
 
   function projectListHtml() {
     return app.projects.slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0)).map(p => `
-      <button class="admin-list-item has-thumb ${p.id===selectedProjectId?'active':''} ${p.visible===false?'is-hidden-item':''}" data-project-id="${escapeHtml(p.id)}">
+      <button class="admin-list-item has-thumb ${p.id===selectedProjectId?'active':''} ${p.visible===false?'is-hidden-item':''} ${p.private?'is-private-item':''}" data-project-id="${escapeHtml(p.id)}">
         ${listThumb(projectThumbUrl(p))}
-        <span class="admin-list-text"><b>${escapeHtml(typeof p.title === 'object' ? p.title.ko : p.title)}</b><small>${escapeHtml(p.year)} · ${(p.categories||[]).join(' / ').toUpperCase()} · ${(p.images||[]).length}장${p.visible===false?' · 숨김':''}</small>
+        <span class="admin-list-text"><b>${escapeHtml(typeof p.title === 'object' ? p.title.ko : p.title)}</b><small>${escapeHtml(p.year)} · ${(p.categories||[]).join(' / ').toUpperCase()} · ${(p.images||[]).length}장${p.visible===false?' · 숨김':''}</small>${p.private?'<span class="admin-private-badge">미공개</span>':''}
         <span class="admin-list-tools"><span class="admin-mini" data-move="up">↑</span><span class="admin-mini" data-move="down">↓</span></span></span>
       </button>`).join('');
   }
@@ -401,6 +410,7 @@
           <label class="admin-field"><span>연도</span><input data-pfield="year" value="${escapeHtml(p.year)}"></label>
           <label class="admin-field"><span>구분</span><select data-pfield="type"><option ${p.type==='WORK'?'selected':''}>WORK</option><option ${p.type==='FANART'?'selected':''}>FANART</option><option ${p.type==='ORIGINAL'?'selected':''}>ORIGINAL</option></select></label>
           <label class="admin-field"><span>채색</span><select data-pfield="style"><option value="">없음</option><option ${p.style==='깔끔'?'selected':''}>깔끔</option><option ${p.style==='꾸덕'?'selected':''}>꾸덕</option><option ${p.style==='기타'?'selected':''}>기타</option></select></label>
+          <label class="admin-field full admin-private-toggle"><input type="checkbox" data-private-toggle ${p.private?'checked':''}><span><b>미공개 작품</b> 사이트에 올리지 않고 비공개 저장소에만 보관합니다. 공개할 때 체크를 풀고 저장하세요.</span></label>
           <label class="admin-field"><span>공개</span><select data-pfield="visible"><option value="true" ${p.visible!==false?'selected':''}>공개</option><option value="false" ${p.visible===false?'selected':''}>숨김</option></select></label>
           <label class="admin-field full"><span>설명</span><textarea data-pfield="description">${escapeHtml(desc)}</textarea></label>
           <label class="admin-field full"><span>추가 태그 · 쉼표 구분</span><input data-pfield="extraTags" value="${escapeHtml((p.extraTags||[]).join(', '))}"></label>
@@ -479,6 +489,11 @@
       else p[field] = input.value;
       app.refreshAll();
     }));
+    editor.querySelector('[data-private-toggle]')?.addEventListener('change', event => {
+      if (event.target.checked) p.private = true; else delete p.private;
+      app.refreshAll(); renderEditor(); setTab('works');
+      toast(p.private ? '미공개로 바꿨습니다. 사이트에 저장하면 비공개 저장소로 옮겨집니다.' : '공개로 바꿨습니다. 사이트에 저장하면 사이트에 올라갑니다.');
+    });
     editor.querySelectorAll('[data-category]').forEach(box => box.addEventListener('change', () => {
       p.categories = [...editor.querySelectorAll('[data-category]:checked')].map(el=>el.dataset.category);
       app.refreshAll(); renderEditor(); setTab('works');
