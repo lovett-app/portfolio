@@ -101,7 +101,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 20
+      "sortOrder": 70
     },
     {
       "id": "hangyeol-orijineol-gok-balmae-gutjeu",
@@ -130,7 +130,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 30
+      "sortOrder": 80
     },
     {
       "id": "rudidik-jangpaedeu",
@@ -159,7 +159,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 40
+      "sortOrder": 90
     },
     {
       "id": "kuu-orijineol-gok-lie-shy-why",
@@ -202,7 +202,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 10
+      "sortOrder": 60
     },
     {
       "id": "cherry-mat",
@@ -225,7 +225,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 50,
+      "sortOrder": 100,
       "date": "2026-07-01"
     },
     {
@@ -252,7 +252,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 60,
+      "sortOrder": 110,
       "date": "2026-07-01"
     },
     {
@@ -276,7 +276,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 70,
+      "sortOrder": 120,
       "date": "2026-07-01"
     },
     {
@@ -299,7 +299,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 80,
+      "sortOrder": 130,
       "date": "2026-07-01"
     },
     {
@@ -323,7 +323,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 90,
+      "sortOrder": 140,
       "date": "2026-07-01"
     },
     {
@@ -350,7 +350,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 100,
+      "sortOrder": 150,
       "date": "2026-07-01"
     },
     {
@@ -377,7 +377,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 110,
+      "sortOrder": 160,
       "date": "2026-07-01"
     },
     {
@@ -401,7 +401,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 120,
+      "sortOrder": 170,
       "date": "2026-07-01"
     },
     {
@@ -437,7 +437,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 130
+      "sortOrder": 180
     },
     {
       "id": "hane-paenseobiseu-keobeogok",
@@ -471,7 +471,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 140
+      "sortOrder": 190
     },
     {
       "id": "michyu-gwiyeopgiman-hamyeon-andoenayo-ke",
@@ -497,7 +497,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 150
+      "sortOrder": 200
     },
     {
       "id": "wedding-costume",
@@ -541,7 +541,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 160,
+      "sortOrder": 210,
       "date": "2026-04-30"
     },
     {
@@ -572,7 +572,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 170
+      "sortOrder": 220
     },
     {
       "id": "hadia-gutjeu-ilreoseuteu",
@@ -610,7 +610,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 180
+      "sortOrder": 230
     },
     {
       "id": "hanavi-cheri-elra-goldeunkeobeo",
@@ -639,7 +639,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 190
+      "sortOrder": 240
     },
     {
       "id": "beibeulru-akademi-jangpaedeu-ilreoseuteu",
@@ -668,7 +668,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 200
+      "sortOrder": 250
     },
     {
       "id": "mangya-gutjeu-ilreoseuteu",
@@ -704,7 +704,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 210
+      "sortOrder": 260
     },
     {
       "id": "rudidik-orijineol-hedeu-sammyeondo",
@@ -733,7 +733,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 220
+      "sortOrder": 270
     },
     {
       "id": "hanabi-meibi-keuriseumaseu-ilreoseuteu",
@@ -776,7 +776,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 230
+      "sortOrder": 280
     },
     {
       "id": "vpeurojekteu-gutjeu-ilreoseuteu",
@@ -805,7 +805,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 240
+      "sortOrder": 290
     },
     {
       "id": "hanavi-maid-popup",
@@ -869,7 +869,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 250
+      "sortOrder": 300
     },
     {
       "id": "kuu-jane-doe-keobeogok",
@@ -895,7 +895,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 260
+      "sortOrder": 310
     },
     {
       "id": "ssancheseu-bangsonghwamyeon",
@@ -921,7 +921,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 270
+      "sortOrder": 320
     },
     {
       "id": "stage-background",
@@ -959,7 +959,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 280,
+      "sortOrder": 330,
       "date": "2025-09-23"
     },
     {
@@ -989,7 +989,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 290
+      "sortOrder": 340
     },
     {
       "id": "kunami-bangsonghwamyeon",
@@ -1015,7 +1015,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 300
+      "sortOrder": 360
     },
     {
       "id": "gomi-baeneo",
@@ -1041,7 +1041,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 310
+      "sortOrder": 370
     },
     {
       "id": "ninnin-orijineol-uisang",
@@ -1070,7 +1070,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 320
+      "sortOrder": 380
     },
     {
       "id": "ijuin-deureseu-uisang",
@@ -1127,7 +1127,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 330
+      "sortOrder": 400
     },
     {
       "id": "imuji-bangsonghwamyeon",
@@ -1156,7 +1156,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 340
+      "sortOrder": 410
     },
     {
       "id": "remember-project",
@@ -1198,7 +1198,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 350,
+      "sortOrder": 420,
       "date": "2025-07-01"
     },
     {
@@ -1229,7 +1229,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 360
+      "sortOrder": 430
     },
     {
       "id": "rosyeonyom-yeoreum-jangpaedeu",
@@ -1258,7 +1258,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 370
+      "sortOrder": 440
     },
     {
       "id": "cheongbaekgayodaejeon-raieontim-uisang",
@@ -1292,7 +1292,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 380
+      "sortOrder": 450
     },
     {
       "id": "kuu-2025-saengil-gutjeu",
@@ -1335,7 +1335,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 390
+      "sortOrder": 460
     },
     {
       "id": "obeodeowol-danche-ilreoseuteu",
@@ -1364,7 +1364,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 400
+      "sortOrder": 390
     },
     {
       "id": "aijjyang-orijineol-hedeu-sammyeondo",
@@ -1393,7 +1393,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 410
+      "sortOrder": 470
     },
     {
       "id": "haibeulruming-sunyeonaeui-inggot-keobeog",
@@ -1435,7 +1435,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 420
+      "sortOrder": 480
     },
     {
       "id": "beulrujeompeu-gutjeu-ilreoseuteu",
@@ -1464,7 +1464,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 430
+      "sortOrder": 490
     },
     {
       "id": "arane-chaeneorateu",
@@ -1490,7 +1490,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 440
+      "sortOrder": 500
     },
     {
       "id": "ninnin-yeonmal-deureseu-uisang",
@@ -1516,11 +1516,11 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 450
+      "sortOrder": 510
     },
     {
-      "id": "project-1791373357291",
-      "title": "아라네님 쾌청 커버곡",
+      "id": "project-1791373160244",
+      "title": "아라네님 커버곡 쾌청",
       "year": "2025",
       "categories": [
         "cover"
@@ -1530,19 +1530,19 @@ const PORTFOLIO_DATA = {
       "description": "",
       "extraTags": [],
       "covers": {
-        "all": "2025-cover-arane-cover-01"
+        "all": "2025-cover-arane-01"
       },
       "images": [
         {
-          "src": "2025-cover-arane-cover-01",
+          "src": "2025-cover-arane-01",
           "caption": "아라네님_완성본_눈뜬 얼굴",
           "commercial": false,
           "company": ""
         }
       ],
       "visible": true,
-      "sortOrder": 460,
-      "slug": "arane-cover"
+      "sortOrder": 350,
+      "slug": "arane"
     }
   ],
   "events": [
@@ -1559,7 +1559,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 60
+      "sortOrder": 20
     },
     {
       "id": "illustar-fes",
@@ -1571,7 +1571,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 50
+      "sortOrder": 30
     },
     {
       "id": "holosma",
@@ -1586,7 +1586,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 40
+      "sortOrder": 50
     },
     {
       "id": "seoul-comic-world",
@@ -1601,7 +1601,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 30
+      "sortOrder": 60
     },
     {
       "id": "ghost-office-only",
@@ -1613,7 +1613,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 20
+      "sortOrder": 40
     }
   ],
   "schedule": {
