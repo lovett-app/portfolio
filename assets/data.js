@@ -584,7 +584,7 @@ const PORTFOLIO_DATA = {
         "ld",
         "sd"
       ],
-      "style": "깔끔",
+      "style": "기타",
       "type": "WORK",
       "description": "LD 일러스트, SD 일러스트 작업입니다.",
       "extraTags": [],
@@ -1404,7 +1404,7 @@ const PORTFOLIO_DATA = {
       "categories": [
         "cover"
       ],
-      "style": "깔끔",
+      "style": "기타",
       "type": "WORK",
       "description": "커버 일러스트 작업입니다.",
       "extraTags": [],
