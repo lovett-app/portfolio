@@ -13,12 +13,69 @@
   let activeTab = 'home';
   let selectedProjectId = app.projects[0]?.id || null;
   let selectedEventId = app.events[0]?.id || null;
-  let selectedScheduleYear = Number(app.settings.scheduleYear) || new Date().getFullYear();
+  let selectedScheduleYear = new Date().getFullYear();
   let homeHeroBlobUrl = null;
   const collapsedCards = new Set();
 
   function escapeHtml(value = '') {
     return String(value).replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+  }
+
+  const isTemp = v => /^(blob:|data:)/.test(String(v || ''));
+  function projectThumbUrl(p) {
+    const preview = p.previewCovers?.all;
+    if (preview) return preview;
+    const cover = p.covers?.all || p.images?.[0]?.src;
+    if (!cover) return '';
+    const img = (p.images || []).find(i => i.src === cover);
+    if (img?.thumbSrc) return img.thumbSrc;
+    return isTemp(cover) ? cover : window.LOVETT_ASSET('thumbs', cover);
+  }
+  function eventThumbUrl(e) {
+    const first = e.images?.[0];
+    if (!first) return '';
+    return isTemp(first) ? first : window.LOVETT_ASSET('full', first);
+  }
+  function listThumb(url) {
+    return url ? `<img class="admin-list-thumb" src="${url}" alt="" loading="lazy" decoding="async">` : '<span class="admin-list-thumb is-empty">NO IMAGE</span>';
+  }
+  const QUICK_KEY = 'lovett-quick-upload';
+  function quickUploadOn() { try { return localStorage.getItem(QUICK_KEY) !== 'off'; } catch (_) { return true; } }
+  function setQuickUpload(on) { try { localStorage.setItem(QUICK_KEY, on ? 'on' : 'off'); } catch (_) {} }
+
+  // 자르기 없이 바로 추가: 상세는 긴 변 2800px WebP, 썸네일은 4:3으로 자동(세로 그림은 얼굴이 있는 위쪽 기준)
+  async function quickConvert(file) {
+    const source = await utils.fileToSource(file);
+    try {
+      const full = await utils.makeResizedWebP(source, { maxEdge: 2800, quality: .88 });
+      const canvas = document.createElement('canvas');
+      canvas.width = 800; canvas.height = 600;
+      const scale = Math.max(800 / source.width, 600 / source.height);
+      const w = source.width * scale, h = source.height * scale;
+      const y = h > 600 ? -(h - 600) * 0.28 : (600 - h) / 2;
+      canvas.getContext('2d').drawImage(source, (800 - w) / 2, y, w, h);
+      const thumb = await utils.makeCanvasWebP(canvas, { quality: .84 });
+      const fullUrl = URL.createObjectURL(full.blob);
+      return { fullUrl, cleanFullUrl: fullUrl, thumbUrl: URL.createObjectURL(thumb.blob), commercial: false, company: '' };
+    } finally { if (source.close) source.close(); }
+  }
+
+  // 업로드 칸에 파일을 끌어다 놓으면 '파일 선택'과 똑같이 처리합니다.
+  function enableDrop(label) {
+    if (!label || label.dataset.dropReady) return;
+    label.dataset.dropReady = '1';
+    const input = label.querySelector('input[type=file]');
+    ['dragenter', 'dragover'].forEach(type => label.addEventListener(type, event => { event.preventDefault(); label.classList.add('is-dragover'); }));
+    ['dragleave', 'drop'].forEach(type => label.addEventListener(type, () => label.classList.remove('is-dragover')));
+    label.addEventListener('drop', event => {
+      event.preventDefault();
+      const files = [...(event.dataTransfer?.files || [])].filter(f => f.type.startsWith('image/'));
+      if (!files.length || !input) return;
+      const dt = new DataTransfer();
+      (input.multiple ? files : files.slice(0, 1)).forEach(f => dt.items.add(f));
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
   }
 
   function openLogin() {
@@ -37,12 +94,25 @@
 
   loginClose?.addEventListener('click', () => loginModal.close());
   loginModal?.addEventListener('click', event => { if (event.target === loginModal) loginModal.close(); });
-  loginForm?.addEventListener('submit', event => {
+  // 비밀번호는 사이트 파일에 글자 그대로 넣지 않고, 되돌릴 수 없는 암호값(해시)만 저장합니다.
+  async function passwordHash(value) {
+    if (!window.crypto?.subtle) throw new Error('이 주소에서는 확인할 수 없습니다. https 주소(lovett.my)로 열어 주세요.');
+    const bytes = new TextEncoder().encode(`lovett-portfolio::${value}`);
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  loginForm?.addEventListener('submit', async event => {
     event.preventDefault();
-    if (passwordInput.value !== app.settings.adminPreviewPassword) {
-      loginError.textContent = '비밀번호가 맞지 않습니다.';
-      return;
-    }
+    try {
+      const legacy = app.settings.adminPreviewPassword; // 예전 data.js와도 호환
+      const ok = app.settings.adminPasswordHash
+        ? (await passwordHash(passwordInput.value)) === app.settings.adminPasswordHash
+        : (legacy != null && passwordInput.value === legacy);
+      if (!ok) {
+        loginError.textContent = '비밀번호가 맞지 않습니다.';
+        return;
+      }
+    } catch (error) { loginError.textContent = error.message; return; }
     loginModal.close();
     openEditor();
   });
@@ -68,12 +138,14 @@
   }
 
   function setTab(tab) {
+    if (tab !== activeTab) { const body = editor.querySelector('.admin-body'); if (body) body.scrollTop = 0; }
     activeTab = tab;
     editor.querySelectorAll('.admin-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
     editor.querySelectorAll('.admin-section').forEach(section => section.classList.toggle('active', section.dataset.section === tab));
   }
 
   function renderEditor() {
+    const keepScroll = editor.querySelector('.admin-body')?.scrollTop || 0;
     editor.innerHTML = `
       <div class="admin-top">
         <div class="admin-top-line">
@@ -106,7 +178,18 @@
     bindGuide();
     bindAssistant();
     enableCardFolding();
+    editor.querySelectorAll('.admin-upload, .ah-hero').forEach(enableDrop);
+    editor.querySelectorAll('[data-list-search]').forEach(input => {
+      const list = editor.querySelector(input.dataset.listSearch);
+      const apply = () => {
+        const q = input.value.trim().toLowerCase();
+        list?.querySelectorAll('.admin-list-item').forEach(item => { item.hidden = q && !item.textContent.toLowerCase().includes(q); });
+      };
+      input.addEventListener('input', apply); apply();
+    });
     setTab(activeTab);
+    const body = editor.querySelector('.admin-body');
+    if (body && keepScroll) body.scrollTop = keepScroll;
   }
 
   function enableCardFolding() {
@@ -165,22 +248,70 @@
     editor.querySelectorAll('.admin-tab').forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
   }
 
+  function heroImageUrl() {
+    const v = app.settings.heroImage;
+    if (!v) return document.getElementById('heroImage')?.src || '';
+    return /^(blob:|data:|https?:)/.test(v) ? v : window.LOVETT_ASSET('full', v);
+  }
+
   function homeSection() {
     const ko = app.translations.ko;
+    const hasKey = !!(app.settings.formsubmitId || '').trim();
     return `
-      <div class="admin-section-title"><div><h3>HOME</h3><p>메인 문구와 연락처, 대표 이미지를 미리 수정합니다.</p></div></div>
-      <div class="admin-grid">
-        <label class="admin-field"><span>첫 줄</span><input id="editHero1" value="${escapeHtml(ko.heroLine1)}"></label>
-        <label class="admin-field"><span>강조 이름</span><input id="editHero2" value="${escapeHtml(ko.heroLine2)}"></label>
-        <label class="admin-field"><span>마지막 줄</span><input id="editHero3" value="${escapeHtml(ko.heroLine3)}"></label>
-        <label class="admin-field"><span>이메일</span><input id="editEmail" value="${escapeHtml(app.settings.email)}"></label>
-        <label class="admin-field full"><span>소개 문구</span><textarea id="editHeroDescription">${escapeHtml(ko.heroDescription)}</textarea></label>
-        <label class="admin-field full"><span>X 주소</span><input id="editXUrl" value="${escapeHtml(app.settings.xUrl)}"></label>
-        <label class="admin-field full"><span>문의 폼 Access Key (Web3Forms)</span><input id="editContactKey" value="${escapeHtml(app.settings.contactFormKey || '')}" placeholder="web3forms.com에서 받은 키를 붙여넣기"></label>
-      </div>
+      <div class="admin-section-title"><div><h3>HOME</h3><p>첫 화면 문구와 대표 이미지, 연락처를 수정합니다.</p></div></div>
+
       <div class="admin-card">
-        <div class="admin-card-head"><div><h4>HOME 대표 이미지</h4><p class="admin-subtle">업로드 후 확대·축소·위치 이동으로 HOME 영역에 맞춰 자를 수 있습니다.</p></div></div>
-        <label class="admin-upload">이미지 선택<input id="editHeroImage" type="file" accept="image/*"></label>
+        <div class="admin-card-head"><div><h4>첫 화면 문구</h4><p class="admin-subtle">한국어(KO) 화면에 보이는 문구입니다. 입력하면 왼쪽 사이트에 바로 보입니다.</p></div></div>
+        <div class="ah-preview" aria-hidden="true">
+          <span id="ahPrev1">${escapeHtml(ko.heroLine1)}</span>
+          <span class="ah-preview-hl" id="ahPrev2">${escapeHtml(ko.heroLine2)}</span>
+          <span id="ahPrev3">${escapeHtml(ko.heroLine3)}</span>
+        </div>
+        <div class="ah-lines">
+          <label class="admin-field"><span>1줄</span><input id="editHero1" value="${escapeHtml(ko.heroLine1)}"></label>
+          <label class="admin-field"><span>2줄 · 강조(노란 형광펜)</span><input id="editHero2" value="${escapeHtml(ko.heroLine2)}"></label>
+          <label class="admin-field"><span>3줄</span><input id="editHero3" value="${escapeHtml(ko.heroLine3)}"></label>
+        </div>
+        <label class="admin-field"><span>소개 문구</span><textarea id="editHeroDescription">${escapeHtml(ko.heroDescription)}</textarea></label>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-head"><div><h4>대표 이미지</h4><p class="admin-subtle">첫 화면 오른쪽에 크게 보이는 그림입니다.</p></div></div>
+        <div class="ah-hero">
+          <img id="adminHeroPreview" src="${heroImageUrl()}" alt="현재 대표 이미지">
+          <div class="ah-hero-actions">
+            <label class="aii-btn ah-file">새 이미지 올리기<input id="editHeroImage" type="file" accept="image/*"></label>
+            <button type="button" class="aii-btn" id="recropHero">지금 이미지 다시 자르기</button>
+            <p class="admin-subtle">올린 뒤 확대·축소·위치 이동으로 맞춥니다. 파일을 이 칸으로 끌어다 놓아도 돼요.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-head"><div><h4>연락처</h4><p class="admin-subtle">첫 화면, 푸터, 문의 폼의 '메일 앱으로 보내기'에 쓰입니다.</p></div></div>
+        <div class="admin-grid">
+          <label class="admin-field"><span>이메일</span><input id="editEmail" type="email" value="${escapeHtml(app.settings.email)}"></label>
+          <label class="admin-field"><span>X 주소</span><input id="editXUrl" type="url" value="${escapeHtml(app.settings.xUrl)}"></label>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-head"><div><h4>문의 폼 연결</h4><p class="admin-subtle">'작업 문의' 폼은 FormSubmit(무료)으로 위 이메일에 보내집니다. 참고 이미지는 메일 첨부파일로 와요.</p></div><span class="ah-status ${hasKey?'on':''}" id="contactKeyStatus">${hasKey?'주소 숨김 코드 사용 중':'이메일로 바로 전송'}</span></div>
+        <ol class="ah-steps">
+          <li>사이트에서 문의 폼으로 <b>시험 문의를 한 번</b> 보냅니다.</li>
+          <li>메일함에 FormSubmit의 확인 메일이 오면 <b>Activate Form</b>을 누릅니다. 이때부터 문의가 메일로 와요. (스팸함도 확인)</li>
+          <li>선택: 활성화 후 오는 메일의 <b>긴 무작위 코드</b>를 아래에 넣고 저장하면, 사이트 코드에서 이메일 대신 그 코드가 쓰입니다.</li>
+        </ol>
+        <label class="admin-field"><span>FormSubmit 코드 (선택)</span><input id="editContactKey" value="${escapeHtml(app.settings.formsubmitId || '')}" placeholder="비워두면 위 이메일 주소로 보냅니다" autocomplete="off"></label>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-head"><div><h4>편집기 비밀번호</h4><p class="admin-subtle">편집 화면을 여는 비밀번호입니다. 사이트 파일에는 암호화된 값만 저장돼서 코드를 열어봐도 보이지 않아요.</p></div></div>
+        <div class="admin-grid">
+          <label class="admin-field"><span>새 비밀번호</span><input id="newAdminPw" type="password" autocomplete="new-password" placeholder="6자 이상"></label>
+          <label class="admin-field"><span>한 번 더</span><input id="newAdminPw2" type="password" autocomplete="new-password"></label>
+        </div>
+        <button type="button" class="aii-btn" id="changeAdminPw">비밀번호 바꾸기</button>
       </div>`;
   }
 
@@ -194,11 +325,33 @@
       });
       app.settings.email = editor.querySelector('#editEmail').value.trim();
       app.settings.xUrl = editor.querySelector('#editXUrl').value.trim();
-      app.settings.contactFormKey = editor.querySelector('#editContactKey').value.trim();
+      app.settings.formsubmitId = editor.querySelector('#editContactKey').value.trim();
       document.querySelectorAll('a[href^="mailto:"]').forEach(a => a.href = `mailto:${app.settings.email}`);
       document.querySelectorAll('a[href*="x.com/"]').forEach(a => a.href = app.settings.xUrl);
     };
     ['#editHero1','#editHero2','#editHero3','#editHeroDescription','#editEmail','#editXUrl','#editContactKey'].forEach(sel => editor.querySelector(sel)?.addEventListener('input', update));
+    [['#editHero1','#ahPrev1'],['#editHero2','#ahPrev2'],['#editHero3','#ahPrev3']].forEach(([from,to]) => editor.querySelector(from)?.addEventListener('input', e => { const el = editor.querySelector(to); if (el) el.textContent = e.target.value; }));
+    editor.querySelector('#editContactKey')?.addEventListener('input', e => { const st = editor.querySelector('#contactKeyStatus'); const on = !!e.target.value.trim(); if (st) { st.classList.toggle('on', on); st.textContent = on ? '주소 숨김 코드 사용 중' : '이메일로 바로 전송'; } });
+    editor.querySelector('#changeAdminPw')?.addEventListener('click', async () => {
+      const a = editor.querySelector('#newAdminPw').value, b = editor.querySelector('#newAdminPw2').value;
+      if (a.length < 6) { alert('비밀번호는 6자 이상으로 정해 주세요.'); return; }
+      if (a !== b) { alert('두 칸의 비밀번호가 다릅니다.'); return; }
+      try { app.settings.adminPasswordHash = await passwordHash(a); } catch (error) { alert(error.message); return; }
+      editor.querySelector('#newAdminPw').value = ''; editor.querySelector('#newAdminPw2').value = '';
+      toast('비밀번호를 바꿨습니다. 사이트에 저장을 눌러야 적용돼요.');
+    });
+    editor.querySelector('#recropHero')?.addEventListener('click', async () => {
+      try {
+        const source = await utils.urlToSource(heroImageUrl());
+        const cropped = await openCropper(source, { title:'HOME 대표 이미지', aspect:1.45, outputWidth:1740, outputHeight:1200, quality:.88, allowAspect:false });
+        if (homeHeroBlobUrl) URL.revokeObjectURL(homeHeroBlobUrl);
+        homeHeroBlobUrl = URL.createObjectURL(cropped.blob);
+        app.setHeroImage(homeHeroBlobUrl);
+        if (source.close) source.close();
+        renderEditor(); setTab('home');
+        toast('대표 이미지를 다시 잘랐습니다. 사이트에 저장을 눌러 반영하세요.');
+      } catch (error) { if (error.message !== 'CROP_CANCEL') alert(error.message); }
+    });
     editor.querySelector('#editHeroImage')?.addEventListener('change', async event => {
       const file = event.target.files?.[0]; if (!file) return;
       try {
@@ -208,6 +361,7 @@
         homeHeroBlobUrl = URL.createObjectURL(cropped.blob);
         app.setHeroImage(homeHeroBlobUrl);
         if (source.close) source.close();
+        renderEditor(); setTab('home');
         toast('HOME 대표 이미지를 바꿨습니다. 사이트에 저장을 눌러 반영하세요.');
       } catch (error) { if (error.message !== 'CROP_CANCEL') alert(error.message); }
       event.target.value = '';
@@ -220,16 +374,17 @@
     return `
       <div class="admin-section-title"><div><h3>WORKS</h3><p>프로젝트 추가·수정·숨김·삭제와 이미지를 관리합니다.</p></div><button class="admin-soft-btn" id="addProject">+ 프로젝트</button></div>
       <div class="admin-split">
-        <div class="admin-list" id="projectList">${projectListHtml()}</div>
+        <div class="admin-list-wrap"><input class="admin-list-search" type="search" placeholder="프로젝트 검색" data-list-search="#projectList"><div class="admin-list" id="projectList">${projectListHtml()}</div></div>
         <div id="projectEditor">${selected ? projectEditorHtml(selected) : '<div class="admin-card">프로젝트가 없습니다.</div>'}</div>
       </div>`;
   }
 
   function projectListHtml() {
     return app.projects.slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0)).map(p => `
-      <button class="admin-list-item ${p.id===selectedProjectId?'active':''}" data-project-id="${escapeHtml(p.id)}">
-        <b>${escapeHtml(typeof p.title === 'object' ? p.title.ko : p.title)}</b><small>${escapeHtml(p.year)} · ${(p.categories||[]).join(' / ').toUpperCase()}</small>
-        <span class="admin-list-tools"><span class="admin-mini" data-move="up">↑</span><span class="admin-mini" data-move="down">↓</span></span>
+      <button class="admin-list-item has-thumb ${p.id===selectedProjectId?'active':''} ${p.visible===false?'is-hidden-item':''}" data-project-id="${escapeHtml(p.id)}">
+        ${listThumb(projectThumbUrl(p))}
+        <span class="admin-list-text"><b>${escapeHtml(typeof p.title === 'object' ? p.title.ko : p.title)}</b><small>${escapeHtml(p.year)} · ${(p.categories||[]).join(' / ').toUpperCase()} · ${(p.images||[]).length}장${p.visible===false?' · 숨김':''}</small>
+        <span class="admin-list-tools"><span class="admin-mini" data-move="up">↑</span><span class="admin-mini" data-move="down">↓</span></span></span>
       </button>`).join('');
   }
 
@@ -255,14 +410,38 @@
       <div class="admin-card">
         <div class="admin-card-head"><div><h4>이미지</h4><p class="admin-subtle">추가할 때 상세 이미지와 4:3 썸네일을 각각 확대·축소·이동해 자를 수 있습니다.</p></div></div>
         <div class="admin-image-grid" id="projectImages">${projectImagesHtml(p)}</div>
-        <label class="admin-upload" style="margin-top:9px">이미지 추가<input id="projectImageInput" type="file" accept="image/*" multiple></label>
+        <label class="admin-upload" style="margin-top:9px"><span class="admin-upload-text">이미지 추가 · 여러 장 선택하거나 여기로 끌어다 놓기</span><input id="projectImageInput" type="file" accept="image/*" multiple></label>
+        <label class="admin-quick-toggle"><input type="checkbox" id="quickUploadToggle" ${quickUploadOn()?'checked':''}><span><b>빠른 업로드</b> 자르기 없이 바로 추가하고 썸네일은 자동으로 만듭니다. 마음에 안 드는 것만 나중에 '썸네일 자르기'로 고치면 돼요.</span></label>
       </div>`;
   }
 
   function projectImagesHtml(p) {
+    const cats = ['all', ...(p.categories||[])];
     return (p.images||[]).map((img,index) => {
       const src = img.thumbSrc || (String(img.src).startsWith('blob:') ? img.src : window.LOVETT_ASSET('thumbs', img.src));
-      return `<div class="admin-image-item" data-image-index="${index}"><img src="${src}" alt=""><div class="admin-image-info"><input class="admin-field-caption" value="${escapeHtml(typeof img.caption==='object'?img.caption.ko:img.caption||'')}" placeholder="캡션"><div class="admin-image-license"><label class="admin-commercial-check"><input type="checkbox" data-image-commercial ${img.commercial?'checked':''}><span>상업적 작업 · 저작권 양도</span></label><label class="admin-company-field ${img.commercial?'':'is-hidden'}"><span>회사명</span><input data-image-company value="${escapeHtml(img.company||'')}" placeholder="예: COMPANY NAME"></label>${img.commercial&&img.company?`<small class="admin-copyright-preview">Copyright assigned to ${escapeHtml(img.company)}.</small>`:''}</div><div class="admin-image-actions"><button class="primary" data-edit-thumb>썸네일 자르기</button><button data-edit-full>상세 자르기</button><button data-cover="all">ALL 대표</button>${(p.categories||[]).map(cat=>`<button data-cover="${cat}">${cat.toUpperCase()} 대표</button>`).join('')}<button data-remove-image>삭제</button></div></div></div>`;
+      const coverOf = cats.filter(cat => p.covers?.[cat] === img.src);
+      const caption = typeof img.caption==='object' ? img.caption.ko : (img.caption||'');
+      return `<div class="admin-image-item aii" data-image-index="${index}">
+        <div class="aii-media">
+          <img src="${src}" alt="" loading="lazy" decoding="async">
+          <span class="aii-num">${index + 1}</span>
+          ${coverOf.length ? `<span class="aii-cover-badge">대표 · ${coverOf.map(c=>c.toUpperCase()).join(' / ')}</span>` : ''}
+          ${img.commercial && img.company ? '<span class="aii-copy-badge">©</span>' : ''}
+        </div>
+        <div class="admin-image-info aii-body">
+          <label class="aii-field"><span class="aii-title">캡션</span><input class="admin-field-caption" value="${escapeHtml(caption)}" placeholder="예: LD 일러스트 · 장패드"></label>
+          <div class="aii-group">
+            <span class="aii-title">자르기</span>
+            <div class="aii-row"><button type="button" class="aii-btn" data-edit-thumb>썸네일 (4:3)</button><button type="button" class="aii-btn" data-edit-full>상세 이미지</button></div>
+          </div>
+          <div class="aii-group">
+            <span class="aii-title">대표 이미지로 쓰기 <small>누르면 해당 필터의 목록 사진이 이 그림으로 바뀌어요</small></span>
+            <div class="aii-row">${cats.map(cat => { const on = p.covers?.[cat] === img.src; return `<button type="button" class="aii-chip ${on?'is-on':''}" data-cover="${cat}" aria-pressed="${on}">${on?'✓ ':''}${cat.toUpperCase()}</button>`; }).join('')}</div>
+          </div>
+          <div class="admin-image-license"><label class="admin-commercial-check"><input type="checkbox" data-image-commercial ${img.commercial?'checked':''}><span>상업적 작업 · 저작권 양도</span></label><label class="admin-company-field ${img.commercial?'':'is-hidden'}"><span>회사명</span><input data-image-company value="${escapeHtml(img.company||'')}" placeholder="예: COMPANY NAME"></label>${img.commercial&&img.company?`<small class="admin-copyright-preview">Copyright assigned to ${escapeHtml(img.company)}.</small>`:''}</div>
+          <div class="aii-footer"><button type="button" class="aii-delete" data-remove-image>이미지 삭제</button></div>
+        </div>
+      </div>`;
     }).join('') || '<div class="admin-subtle">등록된 이미지가 없습니다.</div>';
   }
 
@@ -340,7 +519,7 @@
       p.covers ||= {}; p.previewCovers ||= {};
       p.covers[cat] = image.src;
       if (image.thumbSrc) p.previewCovers[cat] = image.thumbSrc; else delete p.previewCovers[cat];
-      app.refreshAll(); toast(`${cat.toUpperCase()} 대표 이미지를 바꿨습니다.`);
+      app.refreshAll(); renderEditor(); setTab('works'); toast(`${cat.toUpperCase()} 대표 이미지를 바꿨습니다.`);
     }));
     editor.querySelectorAll('[data-edit-thumb]').forEach(btn => btn.addEventListener('click', async () => {
       const index = Number(btn.closest('[data-image-index]').dataset.imageIndex);
@@ -374,12 +553,18 @@
       } catch(error) { if(error.message!=='CROP_CANCEL') alert(error.message); }
     }));
     editor.querySelectorAll('[data-remove-image]').forEach(btn => btn.addEventListener('click', () => {
+      if (!confirm('이 이미지를 삭제할까요? (사이트에 저장을 눌러야 실제로 반영됩니다)')) return;
       const index = Number(btn.closest('[data-image-index]').dataset.imageIndex); p.images.splice(index,1); app.refreshAll(); renderEditor(); setTab('works');
     }));
+    editor.querySelector('#quickUploadToggle')?.addEventListener('change', event => setQuickUpload(event.target.checked));
     editor.querySelector('#projectImageInput')?.addEventListener('change', async event => {
-      for (const file of [...(event.target.files||[])]) {
+      const files = [...(event.target.files||[])];
+      const quick = quickUploadOn();
+      const label = event.target.closest('.admin-upload')?.querySelector('.admin-upload-text');
+      for (const [i, file] of files.entries()) {
         try {
-          const image = await cropAndConvert(file);
+          if (label) label.textContent = `처리 중… ${i + 1} / ${files.length}`;
+          const image = quick ? await quickConvert(file) : await cropAndConvert(file);
           p.images.push({src:image.fullUrl,cleanSrc:image.cleanFullUrl,thumbSrc:image.thumbUrl,caption:file.name.replace(/\.[^.]+$/,''),commercial:image.commercial,company:image.company});
           if (!p.covers?.all) { p.covers ||= {}; p.previewCovers ||= {}; p.covers.all=image.fullUrl; p.previewCovers.all=image.thumbUrl; }
         } catch (error) { if (error.message !== 'CROP_CANCEL') alert(error.message); }
@@ -392,10 +577,10 @@
     const selected = app.events.find(e=>e.id===selectedEventId) || app.events[0]; if(selected) selectedEventId=selected.id;
     return `
       <div class="admin-section-title"><div><h3>ACTIVITY</h3><p>행사와 A4 인포 이미지를 관리합니다.</p></div><button class="admin-soft-btn" id="addEvent">+ 행사</button></div>
-      <div class="admin-split"><div class="admin-list" id="eventList">${eventListHtml()}</div><div id="eventEditor">${selected?eventEditorHtml(selected):'<div class="admin-card">행사가 없습니다.</div>'}</div></div>`;
+      <div class="admin-split"><div class="admin-list-wrap"><input class="admin-list-search" type="search" placeholder="행사 검색" data-list-search="#eventList"><div class="admin-list" id="eventList">${eventListHtml()}</div></div><div id="eventEditor">${selected?eventEditorHtml(selected):'<div class="admin-card">행사가 없습니다.</div>'}</div></div>`;
   }
 
-  function eventListHtml(){ return app.events.slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0)).map(e=>{const status=app.eventStatusFromDate(e.date);e.status=status;return `<button class="admin-list-item ${e.id===selectedEventId?'active':''}" data-event-id="${e.id}"><b>${escapeHtml(e.title)}</b><small>${escapeHtml(e.date)} · ${status==='done'?'참가 완료':'참가 예정'}</small><span class="admin-list-tools"><span class="admin-mini" data-move="up">↑</span><span class="admin-mini" data-move="down">↓</span></span></button>`}).join(''); }
+  function eventListHtml(){ return app.events.slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0)).map(e=>{const status=app.eventStatusFromDate(e.date);e.status=status;return `<button class="admin-list-item has-thumb ${e.id===selectedEventId?'active':''} ${e.visible===false?'is-hidden-item':''}" data-event-id="${e.id}">${listThumb(eventThumbUrl(e))}<span class="admin-list-text"><b>${escapeHtml(e.title)}</b><small>${escapeHtml(e.date)} · ${status==='done'?'참가 완료':'참가 예정'}${e.visible===false?' · 숨김':''}</small><span class="admin-list-tools"><span class="admin-mini" data-move="up">↑</span><span class="admin-mini" data-move="down">↓</span></span></span></button>`}).join(''); }
 
   function eventEditorHtml(e){
     return `<div class="admin-card"><div class="admin-card-head"><h4>행사 정보</h4><button class="admin-danger-btn" id="deleteEvent">삭제</button></div><div class="admin-grid">
@@ -408,10 +593,10 @@
       <label class="admin-field full"><span>통판 링크</span><input data-efield="mailOrderUrl" type="url" placeholder="https://..." value="${escapeHtml(e.mailOrderUrl||'')}"><small>입력하면 행사 인포 팝업 맨 아래에 통판 버튼이 표시됩니다.</small></label>
       <label class="admin-field"><span>공개</span><select data-efield="visible"><option value="true" ${e.visible!==false?'selected':''}>공개</option><option value="false" ${e.visible===false?'selected':''}>숨김</option></select></label>
     </div></div>
-    <div class="admin-card"><div class="admin-card-head"><div><h4>행사 인포 이미지</h4><p class="admin-subtle">세로 A4 이미지는 비율을 자르지 않고 WebP로 변환합니다.</p></div></div><div class="admin-image-grid">${eventImagesHtml(e)}</div><label class="admin-upload" style="margin-top:9px">인포 이미지 추가<input id="eventImageInput" type="file" accept="image/*" multiple></label></div>`;
+    <div class="admin-card"><div class="admin-card-head"><div><h4>행사 인포 이미지</h4><p class="admin-subtle">세로 A4 이미지는 비율을 자르지 않고 WebP로 변환합니다.</p></div></div><div class="admin-image-grid">${eventImagesHtml(e)}</div><label class="admin-upload" style="margin-top:9px">인포 이미지 추가 · 여러 장 선택하거나 여기로 끌어다 놓기<input id="eventImageInput" type="file" accept="image/*" multiple></label></div>`;
   }
 
-  function eventImagesHtml(e){ return (e.images||[]).map((src,index)=>`<div class="admin-image-item" data-event-image-index="${index}"><img src="${String(src).startsWith('blob:')?src:window.LOVETT_ASSET('full', src)}" style="aspect-ratio:1/1.414;object-fit:contain"><div class="admin-image-info"><div class="admin-image-actions"><button data-remove-event-image>삭제</button></div></div></div>`).join('') || '<div class="admin-subtle">등록된 인포 이미지가 없습니다.</div>'; }
+  function eventImagesHtml(e){ return (e.images||[]).map((src,index)=>`<div class="admin-image-item aii aii-event" data-event-image-index="${index}"><div class="aii-media"><img loading="lazy" decoding="async" src="${String(src).startsWith('blob:')?src:window.LOVETT_ASSET('full', src)}" alt=""><span class="aii-num">${index+1}</span></div><div class="aii-footer"><button type="button" class="aii-delete" data-remove-event-image>이미지 삭제</button></div></div>`).join('') || '<div class="admin-subtle">등록된 인포 이미지가 없습니다.</div>'; }
 
   function bindActivity(){
     editor.querySelector('#addEvent')?.addEventListener('click',()=>{const id=`event-${Date.now()}`;const order=Math.max(0,...app.events.map(e=>e.sortOrder||0))+10;app.events.push({id,status:'upcoming',date:String(new Date().getFullYear()),title:'새 행사',booth:'',images:[],description:'',mailOrderUrl:'',visible:true,sortOrder:order});selectedEventId=id;app.refreshAll();renderEditor();setTab('activity');});
@@ -419,35 +604,81 @@
     const e=app.events.find(x=>x.id===selectedEventId); if(!e)return;
     editor.querySelectorAll('[data-efield]').forEach(input=>input.addEventListener('input',()=>{const field=input.dataset.efield;e[field]=field==='visible'?input.value==='true':input.value;if(field==='date'){e.status=app.eventStatusFromDate(e.date);app.refreshAll();renderEditor();setTab('activity');return;}app.refreshAll();}));
     editor.querySelector('#deleteEvent')?.addEventListener('click',()=>{if(!confirm('이 행사를 삭제할까요? (사이트에 저장을 눌러야 실제로 반영됩니다)'))return;const i=app.events.findIndex(x=>x.id===e.id);if(i>=0)app.events.splice(i,1);selectedEventId=app.events[0]?.id||null;app.refreshAll();renderEditor();setTab('activity');});
-    editor.querySelectorAll('[data-remove-event-image]').forEach(btn=>btn.addEventListener('click',()=>{e.images.splice(Number(btn.closest('[data-event-image-index]').dataset.eventImageIndex),1);app.refreshAll();renderEditor();setTab('activity');}));
+    editor.querySelectorAll('[data-remove-event-image]').forEach(btn=>btn.addEventListener('click',()=>{if(!confirm('이 인포 이미지를 삭제할까요?'))return;e.images.splice(Number(btn.closest('[data-event-image-index]').dataset.eventImageIndex),1);app.refreshAll();renderEditor();setTab('activity');}));
     editor.querySelector('#eventImageInput')?.addEventListener('change',async event=>{for(const file of [...(event.target.files||[])]){try{const source=await utils.fileToSource(file);const result=await utils.makeResizedWebP(source,{maxEdge:2800,quality:.88});e.images.push(URL.createObjectURL(result.blob));if(source.close)source.close();}catch(error){alert(error.message);}}app.refreshAll();renderEditor();setTab('activity');});
   }
 
   function moveEvent(id,dir){const sorted=app.events.slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));const i=sorted.findIndex(e=>e.id===id),t=dir==='up'?i-1:i+1;if(i<0||t<0||t>=sorted.length)return;const a=sorted[i],b=sorted[t],tmp=a.sortOrder;a.sortOrder=b.sortOrder;b.sortOrder=tmp;app.refreshAll();renderEditor();setTab('activity');}
 
   function guideSection(){
-    const scheduleYears = Object.keys(app.scheduleByYear || {}).map(Number).sort((a,b)=>a-b);
-    const currentYear = new Date().getFullYear();
-    if (!scheduleYears.includes(currentYear)) scheduleYears.push(currentYear);
-    if (!scheduleYears.includes(currentYear + 1)) scheduleYears.push(currentYear + 1);
-    scheduleYears.sort((a,b)=>a-b);
-    if (!scheduleYears.includes(selectedScheduleYear)) selectedScheduleYear = scheduleYears[0] || currentYear;
-    const selectedSchedule = app.scheduleByYear[selectedScheduleYear] || (app.scheduleByYear[selectedScheduleYear] = Object.fromEntries(Array.from({length:12},(_,i)=>[i+1,'consult'])));
-    return `<div class="admin-section-title"><div><h3>GUIDE</h3><p>일정·공지·사용범위·가격을 바로 미리 수정합니다.</p></div></div>
-      <div class="admin-card"><div class="admin-card-head"><div><h4>작업 일정</h4><p class="admin-subtle">사이트에는 이번 달부터 앞으로 12개월만 표시됩니다.</p></div><label class="admin-field" style="margin:0;width:150px"><span>편집할 연도</span><select id="scheduleYearEdit">${scheduleYears.map(y=>`<option value="${y}" ${y===selectedScheduleYear?'selected':''}>${y}</option>`).join('')}</select></label></div><div class="admin-months">${Array.from({length:12},(_,i)=>{const m=i+1,s=selectedSchedule[m]||'consult',mark=s==='available'?'○':s==='consult'?'△':'×';return `<button class="admin-month ${s}" data-month="${m}"><b>${String(m).padStart(2,'0')}</b><span>${mark}</span></button>`}).join('')}</div></div>
-      <div class="admin-card"><div class="admin-card-head"><h4>공지</h4></div>${app.guide.notice.map((n,i)=>`<div class="admin-notice-row"><b>${String(i+1).padStart(2,'0')}</b><textarea data-notice="${i}">${escapeHtml(n)}</textarea></div>`).join('')}</div>
-      <div class="admin-card"><div class="admin-card-head"><h4>작업물 사용 범위</h4></div>${app.guide.usage.map((u,i)=>`<div class="admin-usage-row"><input type="text" data-usage-label="${i}" value="${escapeHtml(u.label)}"><label>방송<input type="checkbox" data-usage-stream="${i}" ${u.streaming?'checked':''}></label><label>상업<input type="checkbox" data-usage-commercial="${i}" ${u.commercial?'checked':''}></label></div><label class="admin-field"><span>보조 설명</span><input data-usage-note="${i}" value="${escapeHtml(u.note||'')}"></label>`).join('')}</div>
-      <div class="admin-card"><div class="admin-card-head"><h4>가격</h4><p class="admin-subtle">기존 항목의 명칭과 금액을 수정합니다.</p></div>${priceEditorHtml()}</div>`;
+    const now = new Date();
+    const currentYear = now.getFullYear(), thisMonth = now.getMonth() + 1;
+    const scheduleYears = [...new Set([...Object.keys(app.scheduleByYear || {}).map(Number), currentYear, currentYear + 1])].filter(y => y >= currentYear - 1).sort((a,b)=>a-b);
+    if (!scheduleYears.includes(selectedScheduleYear)) selectedScheduleYear = currentYear;
+    const yearSchedule = app.scheduleByYear[selectedScheduleYear] || {};
+    const markOf = st => st==='available'?'○':st==='consult'?'△':'×';
+    return `<div class="admin-section-title"><div><h3>GUIDE</h3><p>작업 일정, 공지, 사용 범위, 가격을 수정합니다.</p></div></div>
+
+      <div class="admin-card">
+        <div class="admin-card-head"><div><h4>작업 일정</h4><p class="admin-subtle">달을 누를 때마다 <b>× 마감 → △ 문의 → ○ 가능</b> 순서로 바뀝니다.</p></div></div>
+        <div class="ag-year-row">
+          <div class="ag-year">${scheduleYears.map(y=>`<button type="button" class="ag-year-btn ${y===selectedScheduleYear?'is-on':''}" data-schedule-year="${y}">${y}</button>`).join('')}</div>
+          <div class="ag-legend"><span class="available">○ 가능</span><span class="consult">△ 문의</span><span class="closed">× 마감</span></div>
+        </div>
+        <div class="ag-months">${Array.from({length:12},(_,i)=>{const m=i+1,st=yearSchedule[m]||'consult';const isNow=selectedScheduleYear===currentYear&&m===thisMonth;const past=selectedScheduleYear<currentYear||(selectedScheduleYear===currentYear&&m<thisMonth);return `<button type="button" class="ag-month ${st} ${isNow?'is-now':''} ${past?'is-past':''}" data-month="${m}" data-year="${selectedScheduleYear}" title="${m}월"><span class="ag-m">${String(m).padStart(2,'0')}</span><span class="ag-mark">${markOf(st)}</span></button>`}).join('')}</div>
+        <p class="admin-subtle ag-note">지난 달은 흐리게, 이번 달은 테두리로 표시됩니다. 사이트에는 이번 달부터 12개월만 보여요.</p>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-head"><div><h4>공지</h4><p class="admin-subtle">GUIDE의 NOTICE에 번호와 함께 표시됩니다.</p></div></div>
+        ${app.guide.notice.map((n,i)=>`<div class="admin-notice-row ag-notice"><b>${String(i+1).padStart(2,'0')}</b><textarea data-notice="${i}" rows="2">${escapeHtml(n)}</textarea><button type="button" class="ag-x" data-notice-delete="${i}" aria-label="${i+1}번 공지 삭제">삭제</button></div>`).join('')}
+        <button type="button" class="aii-btn ag-add" id="addNotice">+ 공지 추가</button>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-head"><div><h4>작업물 사용 범위</h4><p class="admin-subtle">켜진 칸은 사이트 표에서 ○, 꺼진 칸은 ×로 보입니다.</p></div></div>
+        <div class="ag-usage-head"><span>항목</span><span>보조 설명 (선택)</span><span>방송용</span><span>상업용</span><span></span></div>
+        ${app.guide.usage.map((u,i)=>`<div class="ag-usage">
+          <input type="text" data-usage-label="${i}" value="${escapeHtml(u.label)}" aria-label="항목">
+          <input type="text" data-usage-note="${i}" value="${escapeHtml(u.note||'')}" placeholder="예: 5개 이하" aria-label="보조 설명">
+          <label class="ag-toggle"><input type="checkbox" data-usage-stream="${i}" ${u.streaming?'checked':''}><span>방송</span></label>
+          <label class="ag-toggle"><input type="checkbox" data-usage-commercial="${i}" ${u.commercial?'checked':''}><span>상업</span></label>
+          <button type="button" class="ag-x" data-usage-delete="${i}" aria-label="삭제">삭제</button>
+        </div>`).join('')}
+        <button type="button" class="aii-btn ag-add" id="addUsage">+ 항목 추가</button>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-head"><div><h4>가격</h4><p class="admin-subtle">분야를 눌러 펼친 뒤 금액과 설명을 고칩니다.</p></div></div>
+        ${priceEditorHtml()}
+      </div>`;
   }
 
   function priceEditorHtml(){
-    return ['ld','sd','costume','background'].map(key=>{const p=app.pricing[key];let html=`<div class="admin-price-section"><div class="admin-grid"><label class="admin-field"><span>분야명</span><input data-price-label="${key}" value="${escapeHtml(p.label)}"></label><label class="admin-field"><span>요약 가격</span><input data-price-from="${key}" value="${escapeHtml(p.from)}"></label></div>`;
-      if(p.table){html+=p.table.rows.map((row,i)=>`<div class="admin-price-row"><input data-price-row="${key}:${i}:0" value="${escapeHtml(row[0])}"><input data-price-row="${key}:${i}:1" value="${escapeHtml(row[1])}"><input data-price-row="${key}:${i}:2" value="${escapeHtml(row[2])}"></div>`).join('');html+=`<label class="admin-field admin-price-extras"><span>추가 항목 · 한 줄에 하나</span><textarea data-price-extras="${key}">${escapeHtml((p.extras||[]).join('\n'))}</textarea></label>`;}else{html+=p.rows.map((row,i)=>`<div class="admin-price-row two"><input data-price-simple="${key}:${i}:0" value="${escapeHtml(row[0])}"><input data-price-simple="${key}:${i}:1" value="${escapeHtml(row[1])}"></div>`).join('');html+=`<label class="admin-field"><span>설명</span><textarea data-price-note="${key}">${escapeHtml(p.note||'')}</textarea></label>`;}return html+'</div>';}).join('');
+    return ['ld','sd','costume','background'].map((key,idx)=>{
+      const p=app.pricing[key];
+      let html=`<details class="ag-price" ${idx===0?'open':''}><summary><b>${escapeHtml(p.label)}</b><span>${escapeHtml(p.from)}</span></summary><div class="ag-price-body">
+        <div class="admin-grid"><label class="admin-field"><span>분야명</span><input data-price-label="${key}" value="${escapeHtml(p.label)}"></label><label class="admin-field"><span>대표 가격 (목록에 보이는 문구)</span><input data-price-from="${key}" value="${escapeHtml(p.from)}"></label></div>`;
+      if(p.table){
+        const heads=(p.table.headers||['','','']).map((h,i)=>i===0?(h||'구분'):h);
+        html+=`<div class="ag-table"><div class="admin-price-row ag-th">${heads.map(h=>`<span>${escapeHtml(h)}</span>`).join('')}</div>${p.table.rows.map((row,i)=>`<div class="admin-price-row"><input data-price-row="${key}:${i}:0" value="${escapeHtml(row[0])}" aria-label="구분"><input data-price-row="${key}:${i}:1" value="${escapeHtml(row[1])}" aria-label="${escapeHtml(heads[1]||'')}"><input data-price-row="${key}:${i}:2" value="${escapeHtml(row[2])}" aria-label="${escapeHtml(heads[2]||'')}"></div>`).join('')}</div>`;
+        html+=`<label class="admin-field admin-price-extras"><span>추가 항목 · 한 줄에 하나</span><textarea data-price-extras="${key}">${escapeHtml((p.extras||[]).join('\n'))}</textarea></label>`;
+      } else {
+        html+=`<div class="ag-table"><div class="admin-price-row two ag-th"><span>항목</span><span>가격</span></div>${p.rows.map((row,i)=>`<div class="admin-price-row two"><input data-price-simple="${key}:${i}:0" value="${escapeHtml(row[0])}" aria-label="항목"><input data-price-simple="${key}:${i}:1" value="${escapeHtml(row[1])}" aria-label="가격"></div>`).join('')}</div>`;
+        html+=`<label class="admin-field"><span>설명</span><textarea data-price-note="${key}">${escapeHtml(p.note||'')}</textarea></label>`;
+      }
+      return html+'</div></details>';
+    }).join('');
   }
 
   function bindGuide(){
-    editor.querySelector('#scheduleYearEdit')?.addEventListener('change',e=>{selectedScheduleYear=Number(e.target.value);renderEditor();setTab('guide');});
-    editor.querySelectorAll('[data-month]').forEach(btn=>btn.addEventListener('click',()=>{const month=Number(btn.dataset.month);const yearSchedule=app.scheduleByYear[selectedScheduleYear] || (app.scheduleByYear[selectedScheduleYear]={});const current=yearSchedule[month]||'consult';yearSchedule[month]=current==='closed'?'consult':current==='consult'?'available':'closed';app.renderSchedule();renderEditor();setTab('guide');}));
+    editor.querySelectorAll('[data-schedule-year]').forEach(btn=>btn.addEventListener('click',()=>{selectedScheduleYear=Number(btn.dataset.scheduleYear);renderEditor();setTab('guide');}));
+    editor.querySelector('#addNotice')?.addEventListener('click',()=>{app.guide.notice.push('');app.renderGuideSummary();renderEditor();setTab('guide');const all=editor.querySelectorAll('[data-notice]');all[all.length-1]?.focus();});
+    editor.querySelectorAll('[data-notice-delete]').forEach(btn=>btn.addEventListener('click',()=>{if(!confirm('이 공지를 삭제할까요?'))return;app.guide.notice.splice(Number(btn.dataset.noticeDelete),1);app.renderGuideSummary();renderEditor();setTab('guide');}));
+    editor.querySelector('#addUsage')?.addEventListener('click',()=>{app.guide.usage.push({label:'새 항목',streaming:true,commercial:true});app.renderGuideSummary();renderEditor();setTab('guide');});
+    editor.querySelectorAll('[data-usage-delete]').forEach(btn=>btn.addEventListener('click',()=>{if(!confirm('이 항목을 삭제할까요?'))return;app.guide.usage.splice(Number(btn.dataset.usageDelete),1);app.renderGuideSummary();renderEditor();setTab('guide');}));
+    editor.querySelectorAll('[data-price-label],[data-price-from]').forEach(el=>el.addEventListener('input',()=>{const d=el.closest('details');const k=el.dataset.priceLabel||el.dataset.priceFrom;if(d){d.querySelector('summary b').textContent=d.querySelector('[data-price-label]').value;d.querySelector('summary span').textContent=d.querySelector('[data-price-from]').value;}}));
+    editor.querySelectorAll('[data-month]').forEach(btn=>btn.addEventListener('click',()=>{const month=Number(btn.dataset.month),year=Number(btn.dataset.year);const yearSchedule=app.scheduleByYear[year]||(app.scheduleByYear[year]=Object.fromEntries(Array.from({length:12},(_,i)=>[i+1,'consult'])));const current=yearSchedule[month]||'consult';yearSchedule[month]=current==='closed'?'consult':current==='consult'?'available':'closed';app.renderSchedule();renderEditor();setTab('guide');}));
     editor.querySelectorAll('[data-notice]').forEach(el=>el.addEventListener('input',()=>{app.guide.notice[Number(el.dataset.notice)]=el.value;app.renderGuideSummary();}));
     editor.querySelectorAll('[data-usage-label]').forEach(el=>el.addEventListener('input',()=>{app.guide.usage[Number(el.dataset.usageLabel)].label=el.value;app.renderGuideSummary();}));
     editor.querySelectorAll('[data-usage-note]').forEach(el=>el.addEventListener('input',()=>{app.guide.usage[Number(el.dataset.usageNote)].note=el.value;app.renderGuideSummary();}));

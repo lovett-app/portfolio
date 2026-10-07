@@ -173,6 +173,15 @@
           <label><span data-i18n="contactDeadline">희망 마감일 (선택)</span><input name="deadline" type="date"></label>
           <label><span data-i18n="contactRef">참고 자료 링크 (선택)</span><input name="reference" type="url" placeholder="https://" maxlength="300"></label>
           <label class="wide"><span data-i18n="contactMessage">문의 내용</span><textarea name="message" required maxlength="4000" rows="6"></textarea></label>
+          <div class="contact-files wide">
+            <span class="contact-files-title"><span data-i18n="contactFiles">참고 이미지 (선택)</span><small class="contact-file-size"></small></span>
+            <label class="contact-drop">
+              <input id="contactFileInput" type="file" accept="image/*" multiple>
+              <b data-i18n="contactFilesPick">이미지 선택</b>
+              <small data-i18n="contactFilesHint">끌어다 놓거나 붙여넣기(Ctrl+V)도 돼요 · 최대 5장, 합계 10MB</small>
+            </label>
+            <ul class="contact-file-list" hidden></ul>
+          </div>
           <input class="contact-honeypot" type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true">
           <div class="contact-actions wide">
             <p id="contactStatus" class="contact-status" aria-live="polite"></p>

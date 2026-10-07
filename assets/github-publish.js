@@ -345,7 +345,9 @@
       const parentCommit = await gh(cfg, `${repoPath}/git/commits/${parentSha}`);
 
       await materializeImages(progress);
-      data.settings.github = { owner: cfg.owner, repo: cfg.repo, branch: cfg.branch };
+      // GitHub 아이디·저장소 이름은 사이트 파일에 남기지 않습니다 (이 브라우저에만 기억).
+      delete data.settings.github;
+      delete data.settings.adminPreviewPassword;
 
       const tree = [];
       let done = 0;
