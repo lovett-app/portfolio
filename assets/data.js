@@ -808,6 +808,70 @@ const PORTFOLIO_DATA = {
       "sortOrder": 240
     },
     {
+      "id": "hanavi-maid-popup",
+      "title": "HANAVI 오프라인 메이드 팝업스토어 일러스트",
+      "slug": "hanavi-maid-popup",
+      "year": "2025",
+      "date": "2025-11-15",
+      "categories": [
+        "ld"
+      ],
+      "style": "깔끔",
+      "type": "WORK",
+      "description": "HANAVI 오프라인 메이드 팝업스토어용 LD 일러스트 작업입니다.",
+      "extraTags": [],
+      "covers": {
+        "all": "2025-ld-hanavi-maid-popup-01",
+        "ld": "2025-ld-hanavi-maid-popup-01"
+      },
+      "images": [
+        {
+          "src": "2025-ld-hanavi-maid-popup-01",
+          "caption": "LD 일러스트 · 메이드 1",
+          "cleanSrc": "2025-ld-hanavi-maid-popup-01-clean",
+          "commercial": true,
+          "company": "HANAVI"
+        },
+        {
+          "src": "2025-ld-hanavi-maid-popup-02",
+          "caption": "LD 일러스트 · 메이드 2",
+          "cleanSrc": "2025-ld-hanavi-maid-popup-02-clean",
+          "commercial": true,
+          "company": "HANAVI"
+        },
+        {
+          "src": "2025-ld-hanavi-maid-popup-03",
+          "caption": "LD 일러스트 · 메이드 3",
+          "cleanSrc": "2025-ld-hanavi-maid-popup-03-clean",
+          "commercial": true,
+          "company": "HANAVI"
+        },
+        {
+          "src": "2025-ld-hanavi-maid-popup-04",
+          "caption": "LD 일러스트 · 메이드 4",
+          "cleanSrc": "2025-ld-hanavi-maid-popup-04-clean",
+          "commercial": true,
+          "company": "HANAVI"
+        },
+        {
+          "src": "2025-ld-hanavi-maid-popup-05",
+          "caption": "LD 일러스트 · 메이드 5",
+          "cleanSrc": "2025-ld-hanavi-maid-popup-05-clean",
+          "commercial": true,
+          "company": "HANAVI"
+        },
+        {
+          "src": "2025-ld-hanavi-maid-popup-06",
+          "caption": "LD 일러스트 · 메이드 6",
+          "cleanSrc": "2025-ld-hanavi-maid-popup-06-clean",
+          "commercial": true,
+          "company": "HANAVI"
+        }
+      ],
+      "visible": true,
+      "sortOrder": 250
+    },
+    {
       "id": "kuu-jane-doe-keobeogok",
       "title": "쿠우님 jane doe 커버곡",
       "slug": "kuu-jane-doe-keobeogok",
@@ -831,7 +895,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 250
+      "sortOrder": 260
     },
     {
       "id": "ssancheseu-bangsonghwamyeon",
@@ -857,7 +921,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 260
+      "sortOrder": 270
     },
     {
       "id": "stage-background",
@@ -895,7 +959,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 270,
+      "sortOrder": 280,
       "date": "2025-09-23"
     },
     {
@@ -925,7 +989,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 280
+      "sortOrder": 290
     },
     {
       "id": "kunami-bangsonghwamyeon",
@@ -951,7 +1015,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 290
+      "sortOrder": 300
     },
     {
       "id": "gomi-baeneo",
@@ -977,7 +1041,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 300
+      "sortOrder": 310
     },
     {
       "id": "ninnin-orijineol-uisang",
@@ -1006,7 +1070,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 310
+      "sortOrder": 320
     },
     {
       "id": "ijuin-deureseu-uisang",
@@ -1063,7 +1127,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 320
+      "sortOrder": 330
     },
     {
       "id": "imuji-bangsonghwamyeon",
@@ -1092,7 +1156,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 330
+      "sortOrder": 340
     },
     {
       "id": "remember-project",
@@ -1134,7 +1198,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 340,
+      "sortOrder": 350,
       "date": "2025-07-01"
     },
     {
@@ -1165,7 +1229,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 350
+      "sortOrder": 360
     },
     {
       "id": "rosyeonyom-yeoreum-jangpaedeu",
@@ -1194,7 +1258,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 360
+      "sortOrder": 370
     },
     {
       "id": "cheongbaekgayodaejeon-raieontim-uisang",
@@ -1228,7 +1292,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 370
+      "sortOrder": 380
     },
     {
       "id": "kuu-2025-saengil-gutjeu",
@@ -1271,7 +1335,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 380
+      "sortOrder": 390
     },
     {
       "id": "obeodeowol-danche-ilreoseuteu",
@@ -1300,7 +1364,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 390
+      "sortOrder": 400
     },
     {
       "id": "aijjyang-orijineol-hedeu-sammyeondo",
@@ -1329,7 +1393,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 400
+      "sortOrder": 410
     },
     {
       "id": "haibeulruming-sunyeonaeui-inggot-keobeog",
@@ -1371,7 +1435,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 410
+      "sortOrder": 420
     },
     {
       "id": "beulrujeompeu-gutjeu-ilreoseuteu",
@@ -1400,7 +1464,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 420
+      "sortOrder": 430
     },
     {
       "id": "arane-chaeneorateu",
@@ -1426,7 +1490,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 430
+      "sortOrder": 440
     },
     {
       "id": "ninnin-yeonmal-deureseu-uisang",
@@ -1452,7 +1516,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 440
+      "sortOrder": 450
     }
   ],
   "events": [
