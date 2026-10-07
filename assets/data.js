@@ -419,14 +419,17 @@ const PORTFOLIO_DATA = {
       "description": "의상 디자인, 오리지널 캐릭터 디자인 작업입니다.",
       "extraTags": [],
       "covers": {
-        "all": "2026-costume-yuriri-gongju-meideu-uisang-01",
+        "all": "2026-costume-yuriri-gongju-meideu-uisang-03",
         "costume": "2026-costume-yuriri-gongju-meideu-uisang-02",
-        "original": "2026-costume-yuriri-gongju-meideu-uisang-01"
+        "original": "2026-costume-yuriri-gongju-meideu-uisang-03"
       },
       "images": [
         {
-          "src": "2026-costume-yuriri-gongju-meideu-uisang-01",
-          "caption": "오리지널 캐릭터 디자인 · 유리리님 신의상 live2D 작업"
+          "src": "2026-costume-yuriri-gongju-meideu-uisang-03",
+          "caption": "오리지널 캐릭터 디자인 · 유리리님 신의상 live2D 작업",
+          "commercial": true,
+          "cleanSrc": "2026-costume-yuriri-gongju-meideu-uisang-01",
+          "company": "overthewall"
         },
         {
           "src": "2026-costume-yuriri-gongju-meideu-uisang-02",
@@ -733,7 +736,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 270
+      "sortOrder": 280
     },
     {
       "id": "hanabi-meibi-keuriseumaseu-ilreoseuteu",
@@ -776,7 +779,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 280
+      "sortOrder": 290
     },
     {
       "id": "vpeurojekteu-gutjeu-ilreoseuteu",
@@ -805,7 +808,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 290
+      "sortOrder": 300
     },
     {
       "id": "hanavi-maid-popup",
@@ -869,7 +872,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 300
+      "sortOrder": 310
     },
     {
       "id": "kuu-jane-doe-keobeogok",
@@ -895,7 +898,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 310
+      "sortOrder": 320
     },
     {
       "id": "ssancheseu-bangsonghwamyeon",
@@ -921,7 +924,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 320
+      "sortOrder": 330
     },
     {
       "id": "stage-background",
@@ -959,7 +962,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 330,
+      "sortOrder": 340,
       "date": "2025-09-23"
     },
     {
@@ -989,7 +992,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 340
+      "sortOrder": 350
     },
     {
       "id": "kunami-bangsonghwamyeon",
@@ -1015,7 +1018,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 350
+      "sortOrder": 360
     },
     {
       "id": "gomi-baeneo",
@@ -1041,7 +1044,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 360
+      "sortOrder": 370
     },
     {
       "id": "ninnin-orijineol-uisang",
@@ -1070,7 +1073,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 370
+      "sortOrder": 380
     },
     {
       "id": "ijuin-deureseu-uisang",
@@ -1127,7 +1130,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 380
+      "sortOrder": 390
     },
     {
       "id": "imuji-bangsonghwamyeon",
@@ -1156,7 +1159,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 390
+      "sortOrder": 400
     },
     {
       "id": "remember-project",
@@ -1198,7 +1201,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 400,
+      "sortOrder": 410,
       "date": "2025-07-01"
     },
     {
@@ -1229,7 +1232,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 410
+      "sortOrder": 420
     },
     {
       "id": "rosyeonyom-yeoreum-jangpaedeu",
@@ -1258,7 +1261,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 420
+      "sortOrder": 430
     },
     {
       "id": "cheongbaekgayodaejeon-raieontim-uisang",
@@ -1292,7 +1295,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 440
+      "sortOrder": 450
     },
     {
       "id": "kuu-2025-saengil-gutjeu",
@@ -1341,7 +1344,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 450
+      "sortOrder": 460
     },
     {
       "id": "obeodeowol-danche-ilreoseuteu",
@@ -1370,7 +1373,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 460
+      "sortOrder": 470
     },
     {
       "id": "aijjyang-orijineol-hedeu-sammyeondo",
@@ -1399,7 +1402,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 470
+      "sortOrder": 480
     },
     {
       "id": "haibeulruming-sunyeonaeui-inggot-keobeog",
@@ -1441,7 +1444,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 480
+      "sortOrder": 490
     },
     {
       "id": "beulrujeompeu-gutjeu-ilreoseuteu",
@@ -1470,7 +1473,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 490
+      "sortOrder": 500
     },
     {
       "id": "arane-chaeneorateu",
@@ -1496,7 +1499,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 500
+      "sortOrder": 510
     },
     {
       "id": "ninnin-yeonmal-deureseu-uisang",
@@ -1522,7 +1525,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 510
+      "sortOrder": 520
     },
     {
       "id": "project-1791373357291",
@@ -1547,8 +1550,74 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 430,
+      "sortOrder": 440,
       "slug": "arane-cover"
+    },
+    {
+      "id": "project-1791375194124",
+      "title": "린링님 오리지널 헤드 삼면도",
+      "year": "2026",
+      "categories": [
+        "original"
+      ],
+      "style": "",
+      "type": "WORK",
+      "description": "린링님 오리지널 헤드 삼면도 작업물입니다.",
+      "extraTags": [],
+      "covers": {
+        "all": "2026-original-linling-01"
+      },
+      "images": [
+        {
+          "src": "2026-original-linling-01",
+          "cleanSrc": "2026-original-linling-01-clean",
+          "caption": "린링님_헤드_삼면도",
+          "commercial": true,
+          "company": "린링"
+        }
+      ],
+      "visible": true,
+      "sortOrder": 270,
+      "slug": " LINLING"
+    },
+    {
+      "id": "project-1791375430388",
+      "title": "이세계아이돌 팬아트 공모전 3등",
+      "year": "2024",
+      "categories": [
+        "ld"
+      ],
+      "style": "꾸덕",
+      "type": "FANART",
+      "description": "멜론홍보 등 이미지로 쓰인 이세계아이돌 팬아트입니다.",
+      "extraTags": [],
+      "covers": {
+        "all": "2024-ld-work-03",
+        "ld": "2024-ld-work-03"
+      },
+      "images": [
+        {
+          "src": "2024-ld-work-01",
+          "caption": "GV5a5VPasAAVOjc",
+          "commercial": false,
+          "company": ""
+        },
+        {
+          "src": "2024-ld-work-02",
+          "caption": "",
+          "commercial": false,
+          "company": ""
+        },
+        {
+          "src": "2024-ld-work-03",
+          "caption": "이세돌 1000일",
+          "commercial": false,
+          "company": ""
+        }
+      ],
+      "visible": true,
+      "sortOrder": 530,
+      "slug": ""
     }
   ],
   "events": [
