@@ -101,7 +101,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 10
+      "sortOrder": 20
     },
     {
       "id": "hangyeol-orijineol-gok-balmae-gutjeu",
@@ -130,7 +130,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 20
+      "sortOrder": 30
     },
     {
       "id": "rudidik-jangpaedeu",
@@ -159,7 +159,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 30
+      "sortOrder": 40
     },
     {
       "id": "kuu-orijineol-gok-lie-shy-why",
@@ -202,7 +202,7 @@ const PORTFOLIO_DATA = {
         }
       ],
       "visible": true,
-      "sortOrder": 40
+      "sortOrder": 10
     },
     {
       "id": "cherry-mat",
@@ -1527,8 +1527,8 @@ const PORTFOLIO_DATA = {
       "title": "6단지의 휴일",
       "booth": "5월의 신부",
       "images": [
-        "event-2026-district6-holiday-01",
-        "event-2026-district6-holiday-02"
+        "event-2026-district6-holiday-03",
+        "event-2026-district6-holiday-04"
       ],
       "description": "",
       "mailOrderUrl": "",
@@ -1553,23 +1553,29 @@ const PORTFOLIO_DATA = {
       "date": "2026.07.25",
       "title": "홀로즈마",
       "booth": "홀로KR은 실존한다",
-      "images": [],
-      "description": "",
-      "mailOrderUrl": "",
-      "visible": true,
-      "sortOrder": 40
-    },
-    {
-      "id": "seoul-comic-world",
-      "status": "upcoming",
-      "date": "2026.09",
-      "title": "서울 코믹월드",
-      "booth": "아나타노 아이도루",
-      "images": [],
+      "images": [
+        "event-2026-holosma-01",
+        "event-2026-holosma-02"
+      ],
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
       "sortOrder": 50
+    },
+    {
+      "id": "seoul-comic-world",
+      "status": "done",
+      "date": "2026.09",
+      "title": "서울 코믹월드",
+      "booth": "아나타노 아이도루",
+      "images": [
+        "event-2026-seoul-comic-world-01",
+        "event-2026-seoul-comic-world-02"
+      ],
+      "description": "",
+      "mailOrderUrl": "",
+      "visible": true,
+      "sortOrder": 60
     },
     {
       "id": "ghost-office-only",
@@ -1581,7 +1587,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 60
+      "sortOrder": 40
     }
   ],
   "schedule": {
