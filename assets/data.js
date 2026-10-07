@@ -1517,6 +1517,32 @@ const PORTFOLIO_DATA = {
       ],
       "visible": true,
       "sortOrder": 450
+    },
+    {
+      "id": "project-1791373160244",
+      "title": "아라네님 커버곡 쾌청",
+      "year": "2025",
+      "categories": [
+        "cover"
+      ],
+      "style": "꾸덕",
+      "type": "WORK",
+      "description": "",
+      "extraTags": [],
+      "covers": {
+        "all": "2025-cover-arane-01"
+      },
+      "images": [
+        {
+          "src": "2025-cover-arane-01",
+          "caption": "아라네님_완성본_눈뜬 얼굴",
+          "commercial": false,
+          "company": ""
+        }
+      ],
+      "visible": true,
+      "sortOrder": 460,
+      "slug": "arane"
     }
   ],
   "events": [
@@ -1533,7 +1559,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 60
+      "sortOrder": 20
     },
     {
       "id": "illustar-fes",
@@ -1545,7 +1571,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 50
+      "sortOrder": 30
     },
     {
       "id": "holosma",
@@ -1560,7 +1586,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 40
+      "sortOrder": 50
     },
     {
       "id": "seoul-comic-world",
@@ -1575,7 +1601,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 30
+      "sortOrder": 60
     },
     {
       "id": "ghost-office-only",
@@ -1587,7 +1613,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 20
+      "sortOrder": 40
     }
   ],
   "schedule": {
