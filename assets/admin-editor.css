@@ -203,3 +203,11 @@ body.admin-editor-open{padding-right:0;overflow:hidden}
 .admin-private-toggle b{display:block;color:#25222a;font-size:13px}
 .admin-private-note{font-weight:700}
 .admin-private-toggle input{width:18px!important;height:18px;min-height:0!important;padding:0!important;border:0!important;box-shadow:none!important}.admin-private-toggle span{flex:1 1 auto;text-transform:none}
+
+/* 끌어서 순서 바꾸기 */
+.admin-list-item{position:relative;padding-left:26px!important;user-select:none;-webkit-user-select:none}
+.admin-drag{position:absolute;left:4px;top:50%;transform:translateY(-50%);width:18px;height:36px;display:grid;place-items:center;border-radius:6px;color:#c8b8c6;font-size:13px;letter-spacing:-3px;cursor:grab;touch-action:none}
+.admin-list-item:hover .admin-drag{color:#8e758c;background:#f6f0f4}
+.admin-list.is-sorting .admin-list-item{transition:transform .12s ease}
+.admin-list-item.is-dragging{z-index:2;cursor:grabbing;box-shadow:0 14px 34px rgba(70,61,72,.22);border-color:#d9547f!important;transform:scale(1.02);background:#fff!important}
+.admin-list.is-sorting{cursor:grabbing}

@@ -78,6 +78,69 @@
     });
   }
 
+  // ---------- 끌어서 순서 바꾸기 ----------
+  // 마우스: 항목을 꾹 눌러 끌기 / 터치: 왼쪽 ⋮⋮ 손잡이를 끌기
+  function enableDragSort(list, idAttr, collection, tab) {
+    if (!list || list.dataset.dragReady) return;
+    list.dataset.dragReady = '1';
+    list.querySelectorAll('.admin-list-item').forEach(item => {
+      if (!item.querySelector('.admin-drag')) item.insertAdjacentHTML('afterbegin', '<span class="admin-drag" title="끌어서 순서 바꾸기" aria-hidden="true">⋮⋮</span>');
+    });
+    let drag = null;
+    const scroller = editor.querySelector('.admin-body');
+    const items = () => [...list.querySelectorAll('.admin-list-item')];
+    list.addEventListener('pointerdown', event => {
+      const item = event.target.closest('.admin-list-item');
+      if (!item || event.button > 0 || event.target.closest('[data-move]')) return;
+      const onHandle = !!event.target.closest('.admin-drag');
+      if (event.pointerType !== 'mouse' && !onHandle) return;
+      drag = { item, startY: event.clientY, startX: event.clientX, active: false, pointerId: event.pointerId };
+    });
+    window.addEventListener('pointermove', event => {
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      if (!drag.active) {
+        if (Math.abs(event.clientY - drag.startY) + Math.abs(event.clientX - drag.startX) < 6) return;
+        if (list.querySelector('.admin-list-item[hidden]')) { toast('검색칸을 비우면 끌어서 순서를 바꿀 수 있어요.'); drag = null; return; }
+        drag.active = true;
+        drag.item.classList.add('is-dragging');
+        list.classList.add('is-sorting');
+        try { drag.item.setPointerCapture(event.pointerId); } catch (_) {}
+      }
+      event.preventDefault();
+      const y = event.clientY;
+      const others = items().filter(el => el !== drag.item);
+      const after = others.find(el => { const r = el.getBoundingClientRect(); return y < r.top + r.height / 2; });
+      if (after) { if (after.previousElementSibling !== drag.item) list.insertBefore(drag.item, after); }
+      else if (list.lastElementChild !== drag.item) list.appendChild(drag.item);
+      if (scroller) {
+        const r = scroller.getBoundingClientRect();
+        if (y < r.top + 60) scroller.scrollTop -= 12; else if (y > r.bottom - 60) scroller.scrollTop += 12;
+      }
+      const lr = list.getBoundingClientRect();
+      if (list.scrollHeight > list.clientHeight) { if (y < lr.top + 40) list.scrollTop -= 10; else if (y > lr.bottom - 40) list.scrollTop += 10; }
+    }, { passive: false });
+    const finish = event => {
+      if (!drag || (event && event.pointerId !== drag.pointerId)) return;
+      const wasActive = drag.active;
+      drag.item.classList.remove('is-dragging');
+      list.classList.remove('is-sorting');
+      drag = null;
+      if (!wasActive) return;
+      list.dataset.justDragged = '1';
+      setTimeout(() => delete list.dataset.justDragged, 50);
+      items().forEach((el, index) => {
+        const target = collection().find(x => x.id === el.dataset[idAttr]);
+        if (target) target.sortOrder = (index + 1) * 10;
+      });
+      app.refreshAll(); renderEditor(); setTab(tab);
+      toast('순서를 바꿨어요. 사이트에 저장을 눌러야 반영됩니다.');
+    };
+    window.addEventListener('pointerup', finish);
+    window.addEventListener('pointercancel', finish);
+    // 끌기가 끝난 직후의 클릭(선택)은 무시
+    list.addEventListener('click', event => { if (list.dataset.justDragged) { event.stopPropagation(); event.preventDefault(); } }, true);
+  }
+
   function openLogin() {
     if (!loginModal?.open) loginModal.showModal();
     loginError.textContent = '';
@@ -188,6 +251,8 @@
     bindAssistant();
     enableCardFolding();
     editor.querySelectorAll('.admin-upload, .ah-hero').forEach(enableDrop);
+    enableDragSort(editor.querySelector('#projectList'), 'projectId', () => app.projects, 'works');
+    enableDragSort(editor.querySelector('#eventList'), 'eventId', () => app.events, 'activity');
     editor.querySelectorAll('[data-list-search]').forEach(input => {
       const list = editor.querySelector(input.dataset.listSearch);
       const apply = () => {
@@ -458,7 +523,7 @@
   function bindWorks() {
     editor.querySelector('#addProject')?.addEventListener('click', () => {
       const id = `project-${Date.now()}`;
-      const order = Math.max(0,...app.projects.map(p=>p.sortOrder||0))+10;
+      const order = Math.min(10,...app.projects.map(p=>p.sortOrder||0))-10; // 새 프로젝트는 맨 위
       app.projects.push({id,title:'새 프로젝트',year:String(new Date().getFullYear()),categories:['ld'],style:'',type:'WORK',description:'',extraTags:[],covers:{},images:[],visible:true,sortOrder:order});
       selectedProjectId = id; app.refreshAll(); renderEditor(); setTab('works');
     });
@@ -614,7 +679,7 @@
   function eventImagesHtml(e){ return (e.images||[]).map((src,index)=>`<div class="admin-image-item aii aii-event" data-event-image-index="${index}"><div class="aii-media"><img loading="lazy" decoding="async" src="${String(src).startsWith('blob:')?src:window.LOVETT_ASSET('full', src)}" alt=""><span class="aii-num">${index+1}</span></div><div class="aii-footer"><button type="button" class="aii-delete" data-remove-event-image>이미지 삭제</button></div></div>`).join('') || '<div class="admin-subtle">등록된 인포 이미지가 없습니다.</div>'; }
 
   function bindActivity(){
-    editor.querySelector('#addEvent')?.addEventListener('click',()=>{const id=`event-${Date.now()}`;const order=Math.max(0,...app.events.map(e=>e.sortOrder||0))+10;app.events.push({id,status:'upcoming',date:String(new Date().getFullYear()),title:'새 행사',booth:'',images:[],description:'',mailOrderUrl:'',visible:true,sortOrder:order});selectedEventId=id;app.refreshAll();renderEditor();setTab('activity');});
+    editor.querySelector('#addEvent')?.addEventListener('click',()=>{const id=`event-${Date.now()}`;const order=Math.min(10,...app.events.map(e=>e.sortOrder||0))-10;app.events.push({id,status:'upcoming',date:String(new Date().getFullYear()),title:'새 행사',booth:'',images:[],description:'',mailOrderUrl:'',visible:true,sortOrder:order});selectedEventId=id;app.refreshAll();renderEditor();setTab('activity');});
     editor.querySelectorAll('#eventList .admin-list-item').forEach(item=>item.addEventListener('click',event=>{const move=event.target.closest('[data-move]');if(move){event.stopPropagation();moveEvent(item.dataset.eventId,move.dataset.move);return;}selectedEventId=item.dataset.eventId;renderEditor();setTab('activity');}));
     const e=app.events.find(x=>x.id===selectedEventId); if(!e)return;
     editor.querySelectorAll('[data-efield]').forEach(input=>input.addEventListener('input',()=>{const field=input.dataset.efield;e[field]=field==='visible'?input.value==='true':input.value;if(field==='date'){e.status=app.eventStatusFromDate(e.date);app.refreshAll();renderEditor();setTab('activity');return;}app.refreshAll();}));
