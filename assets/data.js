@@ -1308,8 +1308,8 @@ const PORTFOLIO_DATA = {
       "description": "LD 일러스트 작업입니다.",
       "extraTags": [],
       "covers": {
-        "all": "2025-ld-kuu-2025-saengil-gutjeu-01",
-        "ld": "2025-ld-kuu-2025-saengil-gutjeu-01"
+        "all": "2025-ld-kuu-2025-saengil-gutjeu-03",
+        "ld": "2025-ld-kuu-2025-saengil-gutjeu-03"
       },
       "images": [
         {
