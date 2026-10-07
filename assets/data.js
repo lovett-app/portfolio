@@ -1533,7 +1533,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 20
+      "sortOrder": 60
     },
     {
       "id": "illustar-fes",
@@ -1545,7 +1545,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 30
+      "sortOrder": 50
     },
     {
       "id": "holosma",
@@ -1560,7 +1560,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 50
+      "sortOrder": 40
     },
     {
       "id": "seoul-comic-world",
@@ -1575,7 +1575,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 60
+      "sortOrder": 30
     },
     {
       "id": "ghost-office-only",
@@ -1587,7 +1587,7 @@ const PORTFOLIO_DATA = {
       "description": "",
       "mailOrderUrl": "",
       "visible": true,
-      "sortOrder": 40
+      "sortOrder": 20
     }
   ],
   "schedule": {
