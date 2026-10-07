@@ -9,7 +9,7 @@ const PORTFOLIO_DATA = {
     "defaultLanguage": "ko",
     "scheduleYear": 2026,
     "adminPasswordHash": "14f9b985f61e1efdad676bbc27a2da728078261bcb751c2552855f4f73fe389c",
-    "heroImage": "2026-ld-cherry-mat-01",
+    "heroImage": "home-hero-20261007",
     "formsubmitId": ""
   },
   "schemas": {
@@ -1308,8 +1308,8 @@ const PORTFOLIO_DATA = {
       "description": "LD 일러스트 작업입니다.",
       "extraTags": [],
       "covers": {
-        "all": "2025-ld-kuu-2025-saengil-gutjeu-03",
-        "ld": "2025-ld-kuu-2025-saengil-gutjeu-03"
+        "all": "2025-ld-kuu-2025-saengil-gutjeu-04",
+        "ld": "2025-ld-kuu-2025-saengil-gutjeu-04"
       },
       "images": [
         {
@@ -1332,6 +1332,12 @@ const PORTFOLIO_DATA = {
           "cleanSrc": "2025-ld-kuu-2025-saengil-gutjeu-03-clean",
           "commercial": true,
           "company": "쿠우"
+        },
+        {
+          "src": "2025-ld-kuu-2025-saengil-gutjeu-04",
+          "caption": "월페이퍼",
+          "commercial": false,
+          "company": ""
         }
       ],
       "visible": true,
